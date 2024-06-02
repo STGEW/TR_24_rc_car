@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 # my change
-set( FREERTOS_KERNEL_PATH "../../../../../../Source" )
-
+set( FREERTOS_KERNEL_PATH "/home/$ENV{USER}/build/FreeRTOS-Kernel" )
 
 # Pull in SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -11,7 +10,7 @@ include(pico_sdk_import.cmake)
 include(FreeRTOS_Kernel_import.cmake)
 
 # RF24 library
-include(./lib/RF24/CMakeLists.txt)
+include(/home/$ENV{USER}/build/RF24/CMakeLists.txt)
 
 project(rc_MCU C CXX ASM)
 
@@ -26,21 +25,21 @@ add_executable(main_rc_mcu
         rfTxTask.cpp
         IntQueueTimer.c
         RegTest.s
-        ../../../../Common/Minimal/blocktim.c
-        ../../../../Common/Minimal/countsem.c
-        ../../../../Common/Minimal/dynamic.c
-        ../../../../Common/Minimal/recmutex.c
-        ../../../../Common/Minimal/QueueOverwrite.c
-        ../../../../Common/Minimal/EventGroupsDemo.c
-        ../../../../Common/Minimal/IntSemTest.c
-        ../../../../Common/Minimal/IntQueue.c
-        ../../../../Common/Minimal/TaskNotify.c
-        ../../../../Common/Minimal/TimerDemo.c
-        ../../../../Common/Minimal/GenQTest.c
-        ../../../../Common/Minimal/death.c
-        ../../../../Common/Minimal/semtest.c
-        ../../../../Common/Minimal/BlockQ.c
-        ../../../../Common/Minimal/flop.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/blocktim.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/countsem.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/dynamic.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/recmutex.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/QueueOverwrite.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/EventGroupsDemo.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/IntSemTest.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/IntQueue.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/TaskNotify.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/TimerDemo.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/GenQTest.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/death.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/semtest.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/BlockQ.c
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/flop.c
         )
 
 target_compile_definitions(main_rc_mcu PRIVATE
@@ -49,7 +48,7 @@ target_compile_definitions(main_rc_mcu PRIVATE
 
 target_include_directories(main_rc_mcu PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../../../../Common/include)
+        /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/include)
 
 target_compile_definitions(main_rc_mcu PRIVATE
         PICO_STDIO_STACK_BUFFER_SIZE=64 # use a small printf on stack buffer

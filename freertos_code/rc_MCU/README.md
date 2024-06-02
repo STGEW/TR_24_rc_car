@@ -14,7 +14,6 @@ where to find related to MCU C things
 
 
 
-https://github.com/ebrezadev/nRF24L01-C-Driver
 
 https://nrf24.github.io/RF24/md_docs_pico_sdk.html
 cd RF24
