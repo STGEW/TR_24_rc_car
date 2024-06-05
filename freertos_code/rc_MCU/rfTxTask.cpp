@@ -14,6 +14,11 @@ bool role = true; // true = TX role, false = RX role
 
 void prvSetupRFHardware()
 {
+    // intially OFF
+    gpio_init(RADIO_LED_PIN);
+    gpio_set_dir(RADIO_LED_PIN, GPIO_OUT);
+    gpio_put(RADIO_LED_PIN, 0);
+
     // Let these addresses be used for the pair
     uint8_t address[][6] = {"1Node", "2Node"};
     bool radioNumber = 0;
@@ -56,6 +61,9 @@ void rfTxTask( void *pvParameters )
 
     /* Initialise xNextWakeTime - this only needs to be done once. */
     xNextWakeTime = xTaskGetTickCount();
+    TickType_t lastTXTicks = xTaskGetTickCount();
+    TickType_t sinceLastTXTicks = 0;
+    float sinceLastTXSec = 0.0;
 
     for( ;; )
     {
@@ -73,10 +81,17 @@ void rfTxTask( void *pvParameters )
             if (report) {
                 // payload was delivered; print the payload sent & the timer result
                 printf("Transmission successful!\n");
+                lastTXTicks = xTaskGetTickCount();
+                gpio_put(RADIO_LED_PIN, 1);
             }
             else {
                 // payload was not delivered
                 printf("Transmission failed or timed out\n");
+                sinceLastTXTicks = xTaskGetTickCount() - lastTXTicks;
+                sinceLastTXSec = sinceLastTXTicks / configTICK_RATE_HZ;
+                if (sinceLastTXSec > TX_LED_TIMEOUT_SEC) {
+                    gpio_put(RADIO_LED_PIN, 0);
+                }
             }
 
             xSemaphoreGive(rfTxSemaphore);

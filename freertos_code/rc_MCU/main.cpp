@@ -123,6 +123,11 @@ int main( void )
 {
     /* Configure the hardware ready to run the demo. */
     prvSetupHardware();
+    // pwr pin init
+    gpio_init(BOOT_LED_PIN);
+    gpio_set_dir(BOOT_LED_PIN, GPIO_OUT);
+    gpio_put(BOOT_LED_PIN, 1);
+
     const char *rtos_name = "FreeRTOS SMP";
     core_1_tasks();
     // Launch FreeRTOS on core 0 and core 1

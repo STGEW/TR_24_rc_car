@@ -40,11 +40,11 @@ void joystickTask( void *pvParameters )
         // originally ADC returns values in range: 0 .. 4095
         adc_select_input(ADC_CHANNEL_X);
         joystick.x = adc_read(); // adc_raw_x
-        printf("joystick x value: %u\n", joystick.x);
+        // printf("joystick x value: %u\n", joystick.x);
 
         adc_select_input(ADC_CHANNEL_Y);
         joystick.y = adc_read(); // adc_raw_y
-        printf("joystick y value: %u\n", joystick.y);
+        // printf("joystick y value: %u\n", joystick.y);
 
         xSemaphoreGive(rfTxSemaphore);
         // 100 msec delay ~ 10 Hz

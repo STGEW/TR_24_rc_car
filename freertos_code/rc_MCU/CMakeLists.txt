@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.13)
 
 # my change
-set( FREERTOS_KERNEL_PATH "/home/$ENV{USER}/build/FreeRTOS-Kernel" )
+set( FREERTOS_KERNEL_PATH "/home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Source" )
+set( PICO_SDK_PATH "/home/$ENV{USER}/build/pico/pico-sdk" )
+# set( PICO_EXAMPLES_PATH "/home/$ENV{USER}/build/pico/pico-examples" )
+
 
 # Pull in SDK (must be before project)
-include(pico_sdk_import.cmake)
+include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 # Pull in FreeRTOS
-include(FreeRTOS_Kernel_import.cmake)
+include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
 # RF24 library
 include(/home/$ENV{USER}/build/RF24/CMakeLists.txt)
