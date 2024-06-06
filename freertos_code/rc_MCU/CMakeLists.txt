@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 
-# my change
+# setup env variables
 set( FREERTOS_KERNEL_PATH "/home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Source" )
 set( PICO_SDK_PATH "/home/$ENV{USER}/build/pico/pico-sdk" )
-# set( PICO_EXAMPLES_PATH "/home/$ENV{USER}/build/pico/pico-examples" )
-
 
 # Pull in SDK (must be before project)
 include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)

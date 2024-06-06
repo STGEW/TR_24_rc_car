@@ -1,26 +1,12 @@
-остановился на своем примере с управлением двигателями. Я все переименовал. Надо опять сделать нормально.
-Из больших задач - разобраться в синтаксисе С
-Посмотреть что-то про cmake, очень уж непонятно все
+The code is written with FreeRTOS. It utilizes only 1 Core of MCU. The concept of tasks was used to design the system.
 
-```shell
-mkdir build
-cd build
-cmake ..
-make
-```
+### The list of tasks
 
+## joystickTask
+Read data from joystick (ADC is used)
 
-where to find related to MCU C things
+## rfTxTask
+Responsible for transmitting the data with tranceiver
 
-
-
-
-https://nrf24.github.io/RF24/md_docs_pico_sdk.html
-cd RF24
-mkdir build
-cd build
-
-export PICO_SDK_PATH=/home/afomin/projects/mj/freertos_projects/pico-sdk
-
-cmake ../examples_pico -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico
-cmake --build . --config Release
+## main
+An entry point, the place where everythin is initialized and triggered.

@@ -1,26 +1,20 @@
 ### Prepare environment
 
-
-0) setup PICO_SDK_PATH
+1) Install dependencies (example is for Ubuntu)
 ```shell
-export PICO_SDK_PATH=/home/$USER/build/pico/pico-sdk
-export FREERTOS_KERNEL_PATH=/home/$USER/build/FreeRTOS-Kernel
+sudo apt install gcc-arm-none-eabi
 ```
 
-1) download freertos, we are interested in kernel
-https://www.freertos.org/a00104.html
-Download archive, extract it
-Copy subdirectory FreeRTOS-Kernel to /home/$USER/build/
-
-2) download freertos with demos
+2) Clone freertos repo
+```shell
 cd /home/$USER/build/
 git clone https://github.com/FreeRTOS/FreeRTOS.git
 cd ./FreeRTOS
 git submodule init
 git submodule update --recursive
+```
 
-
-1) clone pico SDK (please use this document as a reference - https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
+3) clone pico SDK (please use this document as a reference - https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
 ```shell
 mkdir /home/$USER/build
 cd /home/$USER/build
@@ -28,24 +22,23 @@ mkdir ./pico
 cd ./pico
 git clone https://github.com/raspberrypi/pico-sdk.git --branch master
 cd pico-sdk
-git submodule update --init
+git submodule init
+git submodule update --recursive
 cd ..
 git clone https://github.com/raspberrypi/pico-examples.git --branch master
 ```
 
-
-2) build nRF24 driver (please use this document as a reference - https://nrf24.github.io/RF24/md_docs_2pico__sdk.html)
+4) clone and build nRF24 driver (please use this document as a reference - https://nrf24.github.io/RF24/md_docs_2pico__sdk.html)
 ```shell
 cd /home/$USER/build
 git clone https://github.com/nRF24/RF24.git
 
-
+export PICO_SDK_PATH=/home/$USER/build/pico/pico-sdk
 cmake ../examples_pico -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico
 cmake --build . --config Release
 ```
 
-
-### Build C code
+### How to build freertos C code
 Inside freertos_code/car_MCU or freertos_code/rc_MCU
 ```shell
 mkdir build
