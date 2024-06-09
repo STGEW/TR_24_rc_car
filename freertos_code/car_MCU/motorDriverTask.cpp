@@ -25,9 +25,9 @@ void setMotorDirection(int I1_PIN, int I2_PIN, int direction) {
             gpio_put(I1_PIN, 0);
             gpio_put(I2_PIN, 1);
             break;
+        case BRAKE:
             gpio_put(I1_PIN, 1);
             gpio_put(I2_PIN, 1);
-        case BRAKE:
             break;
         default:
             printf("For motor direction unknown value arrived: %d\n", direction);
