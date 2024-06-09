@@ -32,12 +32,11 @@ Motor driver - TBD
 MCU - 2 items. RP2040
 Motors - 4 of them, they are in a set with car frame
 
-# diagram
-Diagram done with draw.io explains in a user-friendly way how everything is connected together.
-TBD - should be merged into 1 diagram with actual pins
-
 # PCB
 Done with a Kicad. Please check ./pcb_design/car_pcb directory with project. ./pcb_design/to_factory contains gerber files generated from the project.
+
+visual diagram done with draw.io explains in a user-friendly way how everything is connected together. - ./pcb_design/diagram.drawio
+
 TBD - inser couple of images
 
 # 3D models
