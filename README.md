@@ -24,12 +24,12 @@ The code is written on C with Freertos OS. For technical details please check ./
 TBD
 
 # BOM
-Joysticks - name
-Battery for car - LiPo battery
+Joysticks - KY-023 - 2 items
+Battery for car - LiPo battery DC-12300 (12V 3000 mAh)
 Batteries for RC - 4 AA type batteries. I'm using 4 Ni-MH accumulators. Can be recharged.
-DC-DC converter - MINI_360. You need 3 of them for converting input voltage to 5V or 3.3V
-Motor driver - TBD
-MCU - 2 items. RP2040
+DC-DC converter - MINI-360 DC-DC buck converter (step down). You need 3 of them for converting input voltage to 5V or 3.3V
+Motor driver - tb6612fng motor driver
+MCU - Paspberry pi PICO W - 2 items (one for car, one for RC)
 Motors - 4 of them, they are in a set with car frame
 
 # PCB
