@@ -1,0 +1,52 @@
+from consts import FORWARD, OFF, REVERSE, BRAKE
+from consts import AI1_PIN, AI2_PIN, BI1_PIN, BI2_PIN
+from consts import STBY_PIN
+from consts import PWM_A_PIN, PWM_B_PIN
+
+from machine import Pin, PWM
+
+
+AI1_gpio = Pin(AI1_PIN, Pin.OUT)
+AI2_gpio = Pin(AI2_PIN, Pin.OUT)
+BI1_gpio = Pin(BI1_PIN, Pin.OUT)
+BI2_gpio = Pin(BI2_PIN, Pin.OUT)
+
+STBY_gpio = Pin(STBY_PIN, Pin.OUT)
+
+A_pwm = PWM(PWM_A_PIN, freq=50, duty_u16=0)
+B_pwm = PWM(PWM_B_PIN, freq=50, duty_u16=0)
+
+set_motor_direction(AI1_gpio, AI2_gpio, OFF)
+set_motor_direction(BI1_gpio, BI2_gpio, OFF)
+STBY_gpio.on()
+
+class Driver:
+    direction_A = OFF
+    direction_B = OFF
+    duty_cycle_A = 0;
+    duty_cycle_B = 0;
+
+
+def _set_motor_direction(i1_pin, i2_pin, direction):
+    print(f'i1: {i1_pin} i2: {i2_pin}, direction: {direction}')
+    if direction == FORWARD:
+        i1_pin.on()
+        i2_pin.off()
+    elif direction == OFF:
+        i1_pin.off()
+        i2_pin.off()
+    elif direction == REVERSE:
+        i1_pin.off()
+        i2_pin.on()
+    else:
+        # BRAKE
+        i1_pin.on()
+        i2_pin.on()
+
+
+def motor_driver_task(driver):
+    print(f'Motor driver task. Driver: {driver}')
+    _set_motor_direction(AI1_gpio, AI2_gpio, driver.direction_A)
+    A_pwm.duty_u16(driver.duty_cycle_A)
+    _set_motor_direction(BI1_gpio, BI2_gpio, driver.direction_B)
+    B_pwm.duty_u16(driver.duty_cycle_B)
