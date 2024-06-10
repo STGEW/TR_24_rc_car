@@ -4,25 +4,18 @@
 #include <stdio.h>
 
 #include "rfTxTask.h"
+#include "../pins.h"
 
 
-#define X_AXIS_PIN      26
-#define Y_AXIS_PIN      27
-#define ADC_CHANNEL_X   0
-#define ADC_CHANNEL_Y   1
-
-
-// initialize required for motor pins
-void prvSetupJoystickHardware( void )
+void setupJoystickTask( void )
 {
     adc_init();
-    // Make sure GPIO is high-impedance, no pullups etc
     adc_gpio_init(X_AXIS_PIN);
     adc_gpio_init(Y_AXIS_PIN);
 }
 
 
-void joystickTask( void *pvParameters )
+void runJoystickTask( void *pvParameters )
 {
 
     TickType_t xNextWakeTime;
@@ -39,12 +32,10 @@ void joystickTask( void *pvParameters )
 
         // originally ADC returns values in range: 0 .. 4095
         adc_select_input(ADC_CHANNEL_X);
-        joystick.x = adc_read(); // adc_raw_x
-        // printf("joystick x value: %u\n", joystick.x);
+        joystick.x = adc_read();
 
         adc_select_input(ADC_CHANNEL_Y);
-        joystick.y = adc_read(); // adc_raw_y
-        // printf("joystick y value: %u\n", joystick.y);
+        joystick.y = adc_read();
 
         xSemaphoreGive(rfTxSemaphore);
         // 100 msec delay ~ 10 Hz

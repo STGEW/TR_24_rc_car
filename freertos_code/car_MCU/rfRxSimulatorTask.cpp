@@ -5,7 +5,7 @@
 #include "task.h"
 
 #include "rfRxSimulatorTask.h"
-#include "commandsProcessorTask.h"
+#include "joystickHandlerTask.h"
 
 // 0.. 4095
 
@@ -28,7 +28,7 @@ void rfRxSimulatorTask(void *pvParameters) {
             rx_byte = uart_getc(UART_ID);
             // Process received byte, for example, print it
             printf("Received: %c\n", rx_byte);
-            xSemaphoreGive(commandsProcessorSemaphore);
+            xSemaphoreGive(joystickHandlerSemaphore);
         }
         vTaskDelay(pdMS_TO_TICKS(10)); // Adjust delay as needed
     }

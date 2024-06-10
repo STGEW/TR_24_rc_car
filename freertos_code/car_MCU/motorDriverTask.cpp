@@ -35,10 +35,10 @@ void setMotorDirection(int I1_PIN, int I2_PIN, int direction) {
     }
 }
 
+
 void pwm_init_pin(uint8_t pin) {
     gpio_set_function(pin, GPIO_FUNC_PWM);
     uint slice_num = pwm_gpio_to_slice_num(pin);
-    printf("Motor driver task slice: %u\n", slice_num);
     pwm_config config = pwm_get_default_config();
     pwm_config_set_clkdiv(&config, 4.f);
     pwm_init(slice_num, &config, true);
@@ -46,7 +46,7 @@ void pwm_init_pin(uint8_t pin) {
 
 
 // initialize required for motor pins
-void prvSetupDriverHardware( void )
+void setupMotorDriverTask( void )
 {
     // intially OFF
     gpio_init(AI1_PIN);
@@ -72,7 +72,7 @@ void prvSetupDriverHardware( void )
 }
 
 
-void driverTask( void *pvParameters )
+void runMotorDriverTask( void *pvParameters )
 {
 
     TickType_t xNextWakeTime;
@@ -94,8 +94,8 @@ void driverTask( void *pvParameters )
                 "motor A direction is: %d duty cycle: %d\n",
                 driver.direction_A,
                 driver.duty_cycle_A);
+
             setMotorDirection(AI1_PIN, AI2_PIN, driver.direction_A);
-            //gpio_put(PWM_A_PIN, 1);
             pwm_set_gpio_level(
                 PWM_A_PIN, driver.duty_cycle_A);
 
@@ -103,8 +103,8 @@ void driverTask( void *pvParameters )
                 "motor B direction is: %d duty cycle: %d\n",
                 driver.direction_B,
                 driver.duty_cycle_B);
+
             setMotorDirection(BI1_PIN, BI2_PIN, driver.direction_B);
-            // gpio_put(PWM_B_PIN, 1);
             pwm_set_gpio_level(
                 PWM_B_PIN, driver.duty_cycle_B);
         } else {

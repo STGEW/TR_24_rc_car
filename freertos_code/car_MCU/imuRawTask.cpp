@@ -4,9 +4,8 @@
 #include "pico/stdlib.h"
 #include "semphr.h"
 #include "pico/binary_info.h"
+#include "../pins.h"
 
-#define IMU_I2C_SDA_PIN 2
-#define IMU_I2C_SCL_PIN 3
 
 int addr = 0x68;
 
@@ -25,7 +24,7 @@ void mpu6050_init() {
 }
 
 
-void prvSetupIMURawTask() {
+void setupIMURawTask() {
 
  	// This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
     i2c_init(i2c1, 400 * 1000);
@@ -80,7 +79,7 @@ void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
     *temp = (*temp / 340.0) + 36.53;
 }
 
-void imuRawTask( void *pvParameters ) 
+void runIMURawTask( void *pvParameters ) 
 {
 
     TickType_t xNextWakeTime;

@@ -3,7 +3,7 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
-
+#include "../pins.h"
 
 /*
     USED DRIVER: tb6612fng
@@ -22,15 +22,8 @@
 #define REVERSE         3
 #define BRAKE           4
 
-#define AI1_PIN         6
-#define AI2_PIN         7
-#define BI1_PIN         8
-#define BI2_PIN         9
-#define STBY_PIN        10
-#define PWM_A_PIN       11
-#define PWM_B_PIN       12
-
 #define DRIVER_COEF     65535 / 100
+
 
 // duty cycle 0 .. 65 535
 struct DriverControlData {

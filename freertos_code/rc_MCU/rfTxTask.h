@@ -13,10 +13,7 @@ struct __attribute__((__packed__)) JoystickRawData {
 extern SemaphoreHandle_t rfTxSemaphore;
 extern struct JoystickRawData joystick;
 
-
-#define CE_PIN  20
-#define CSN_PIN 21
-#define RADIO_LED_PIN           13
 #define TX_LED_TIMEOUT_SEC    1.0
+
 
 #endif /* RF_TX_TASK_H */
