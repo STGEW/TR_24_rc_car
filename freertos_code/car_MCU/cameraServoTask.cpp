@@ -1,11 +1,14 @@
 #include <stdio.h>
-#include "cameraServoControlTask.h"
+#include "cameraServoTask.h"
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
+#include "../pins.h"
 
 
+// variables to communicate with task
 int cameraAngle = 90;
-SemaphoreHandle_t cameraServoControlSemaphore;
+SemaphoreHandle_t cameraServoSemaphore;
+
 
 uint16_t calc_duty_from_angle(int angle) {
     // some magic numbers. I was unable to calculate it in a proper way
@@ -13,7 +16,7 @@ uint16_t calc_duty_from_angle(int angle) {
 }
 
 
-void prvSetupCameraServoTask() {
+void setupCameraServoTask() {
     // Configure PWM settings
     gpio_set_function(CAMERA_SERVO_PIN, GPIO_FUNC_PWM);
 
@@ -40,10 +43,10 @@ void prvSetupCameraServoTask() {
 }
 
 
-void cameraServoTask( void *pvParameters ) {
+void runCameraServoTask( void *pvParameters ) {
     for( ;; )
     {
-        if (xSemaphoreTake(cameraServoControlSemaphore, 0) == pdTRUE) {
+        if (xSemaphoreTake(cameraServoSemaphore, 0) == pdTRUE) {
             printf("Camera new angle to set: %d\n", cameraAngle);
             uint16_t duty = calc_duty_from_angle(cameraAngle);
             pwm_set_gpio_level(CAMERA_SERVO_PIN, duty);

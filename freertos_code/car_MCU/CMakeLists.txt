@@ -23,8 +23,8 @@ pico_sdk_init()
 add_executable(main_car_mcu
         main.cpp
         motorDriverTask.cpp
-        commandsProcessorTask.cpp
-        cameraServoControlTask.cpp
+        joystickHandlerTask.cpp
+        cameraServoTask.cpp
         imuRawTask.cpp
         rfRxSimulatorTask.cpp
         rfRxTask.cpp

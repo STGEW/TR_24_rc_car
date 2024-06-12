@@ -1,10 +1,10 @@
-#include "commandsProcessorTask.h"
+#include "joystickHandlerTask.h"
 #include "motorDriverTask.h"
 #include "hardware/gpio.h"
 #include <stdio.h>
 
 // semaphore for reading data by commandsProcessor
-SemaphoreHandle_t commandsProcessorSemaphore;
+SemaphoreHandle_t joystickHandlerSemaphore;
 struct JoystickRawData joystick = {0, 0};
 
 /*
@@ -22,7 +22,7 @@ int right_side_power = 0;
 
 
 // initialize required for motor pins
-void prvCMDProcessorSetup( void )
+void setupJoystickHandlerTask( void )
 {
     // intially OFF
     gpio_init(RADIO_LED_PIN);
@@ -31,7 +31,7 @@ void prvCMDProcessorSetup( void )
 }
 
 
-void commandsProcessorTask( void *pvParameters )
+void runJoystickHandlerTask( void *pvParameters )
 {
 
     TickType_t xNextWakeTime;
@@ -50,7 +50,7 @@ void commandsProcessorTask( void *pvParameters )
     for( ;; )
     {
 
-        if (xSemaphoreTake(commandsProcessorSemaphore, 0) == pdTRUE) {
+        if (xSemaphoreTake(joystickHandlerSemaphore, 0) == pdTRUE) {
             gpio_put(RADIO_LED_PIN, 1);
             lastCmdTicks = xTaskGetTickCount();
             printf(
@@ -90,8 +90,8 @@ void commandsProcessorTask( void *pvParameters )
                 convert our values to -100%...+100%
             */
             printf("Step 2 - convert values to the range -100%...+100%\n");
-            forward = forward * FROM_JOYSTICK_COEF;
-            turn = turn * FROM_JOYSTICK_COEF;
+            forward = forward * ADC_TO_PERCENTAGE;
+            turn = turn * ADC_TO_PERCENTAGE;
             printf(
                 "After conversion to -100%...+100% range; forward: %d, turn: %d\n",
                 forward, turn);

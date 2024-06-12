@@ -1,15 +1,15 @@
 #include <stdio.h>
-#include <RF24.h>         // RF24 radio object
-#include "rfRxTask.h"
-#include "commandsProcessorTask.h"
+#include <RF24.h>
+#include "joystickHandlerTask.h"
+#include "../pins.h"
+
 
 // instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
-// float payload = 0.0;
-// Used to control whether this node is sending or receiving
 bool role = false; // true = TX role, false = RX role
 
-void prvSetupRFHardware()
+
+void setupRfRxTask()
 {
     uint8_t address[][6] = {"1Node", "2Node"};
     bool radioNumber = 1;
@@ -37,7 +37,7 @@ void prvSetupRFHardware()
 
 }
 
-void rfRxTask( void *pvParameters )
+void runRfRxTask( void *pvParameters )
 {
 
     TickType_t xNextWakeTime;
@@ -58,8 +58,8 @@ void rfRxTask( void *pvParameters )
             uint8_t bytes = radio.getPayloadSize(); // get the size of the payload
             radio.read(&joystick, bytes);            // fetch payload from FIFO
             // print the size of the payload, the pipe number, payload's value
-            printf("Received %d bytes: %u %u\n", bytes, joystick.x, joystick.y);
-            xSemaphoreGive(commandsProcessorSemaphore);
+            printf("RF Received %d bytes: %u %u\n", bytes, joystick.x, joystick.y);
+            xSemaphoreGive(joystickHandlerSemaphore);
         } else {
             // printf("RADIO IS NOT AVAIL\n");
         }

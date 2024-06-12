@@ -1,18 +1,17 @@
 #include "rfTxTask.h"
 #include <stdio.h>
-#include <RF24.h>         // RF24 radio object
-#include <tusb.h>         // tud_cdc_connected()
+#include <RF24.h>
+#include "../pins.h"
 
 // semaphore for reading data by commandsProcessor
 SemaphoreHandle_t rfTxSemaphore;
 struct JoystickRawData joystick = {0, 0};
 
-// instantiate an object for the nRF24L01 transceiver
 RF24 radio(CE_PIN, CSN_PIN);
 bool role = true; // true = TX role, false = RX role
 
 
-void prvSetupRFHardware()
+void setupRfTxTask()
 {
     // intially OFF
     gpio_init(RADIO_LED_PIN);
@@ -22,11 +21,6 @@ void prvSetupRFHardware()
     // Let these addresses be used for the pair
     uint8_t address[][6] = {"1Node", "2Node"};
     bool radioNumber = 0;
-
-    // wait here until the CDC ACM (serial port emulation) is connected
-    // while (!tud_cdc_connected()) {
-    //     sleep_ms(10);
-    // }
 
     // initialize the transceiver on the SPI bus
     if (!radio.begin()) {
@@ -39,8 +33,6 @@ void prvSetupRFHardware()
     radio.openReadingPipe(1, address[!radioNumber]); // using pipe 1
     radio.setChannel(124);
     radio.setDataRate(RF24_2MBPS);
-    // radio.enableDynamicPayloads();
-    // radio.startListening();
     radio.setCRCLength(RF24_CRC_16);
     if (role) {
         radio.stopListening(); // put radio in TX mode
@@ -50,7 +42,7 @@ void prvSetupRFHardware()
     }
 }
 
-void rfTxTask( void *pvParameters )
+void runRfTxTask( void *pvParameters )
 {
 
     TickType_t xNextWakeTime;
@@ -74,18 +66,13 @@ void rfTxTask( void *pvParameters )
                 joystick.x,
                 joystick.y);
 
-            // radio.stopListening();
-            // This device is a TX node
             bool report = radio.write(&joystick, sizeof(joystick));         // transmit & save the report
-            // radio.stopListening();
             if (report) {
-                // payload was delivered; print the payload sent & the timer result
                 printf("Transmission successful!\n");
                 lastTXTicks = xTaskGetTickCount();
                 gpio_put(RADIO_LED_PIN, 1);
             }
             else {
-                // payload was not delivered
                 printf("Transmission failed or timed out\n");
                 sinceLastTXTicks = xTaskGetTickCount() - lastTXTicks;
                 sinceLastTXSec = sinceLastTXTicks / configTICK_RATE_HZ;

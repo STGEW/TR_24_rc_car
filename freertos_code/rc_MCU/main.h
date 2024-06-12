@@ -28,6 +28,5 @@
 #define MAIN_H
 
 #define mainRUN_ON_CORE 1
-#define BOOT_LED_PIN 15
 
 #endif /* MAIN_H */
