@@ -16,15 +16,11 @@ STBY_gpio = Pin(STBY_PIN, Pin.OUT)
 A_pwm = PWM(PWM_A_PIN, freq=50, duty_u16=0)
 B_pwm = PWM(PWM_B_PIN, freq=50, duty_u16=0)
 
-set_motor_direction(AI1_gpio, AI2_gpio, OFF)
-set_motor_direction(BI1_gpio, BI2_gpio, OFF)
-STBY_gpio.on()
 
-class Driver:
-    direction_A = OFF
-    direction_B = OFF
-    duty_cycle_A = 0;
-    duty_cycle_B = 0;
+def init_motor_driver_task():
+    _set_motor_direction(AI1_gpio, AI2_gpio, OFF)
+    _set_motor_direction(BI1_gpio, BI2_gpio, OFF)
+    STBY_gpio.on()
 
 
 def _set_motor_direction(i1_pin, i2_pin, direction):

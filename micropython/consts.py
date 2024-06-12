@@ -22,3 +22,11 @@ CSN_PIN = 21
 # joysticks
 X_AXIS_PIN = 26
 Y_AXIS_PIN = 27
+
+
+class Driver:
+    direction_A = OFF
+    direction_B = OFF
+    duty_cycle_A = 0;
+    duty_cycle_B = 0;
+
