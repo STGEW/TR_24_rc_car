@@ -25,3 +25,5 @@ def rf_rx_task():
             joystick_x, joystick_y = struct.unpack("ii", buf)
             print(f"received joystick x: {joystick_x} y: {joystick_y}")
             return joystick_x, joystick_y
+    else:
+        print(f'nothing to receive')
