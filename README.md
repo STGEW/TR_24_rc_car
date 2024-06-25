@@ -46,9 +46,4 @@ TBD - insert couple of images
 Contains useful pdf files and images
 
 
-TBD:
-- for freertos code
-	1) put pins into one place
-	2) clean the code
-- fix problem with PCB (make rev 1.2)
-- make a generic draw.io diagram with valid pins
+

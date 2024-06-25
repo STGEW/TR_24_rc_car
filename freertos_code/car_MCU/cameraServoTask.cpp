@@ -2,7 +2,7 @@
 #include "cameraServoTask.h"
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
-#include "../pins.h"
+#include "../const.h"
 
 
 // variables to communicate with task

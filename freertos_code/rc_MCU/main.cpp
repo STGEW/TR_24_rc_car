@@ -12,7 +12,7 @@
 
 #include "main.h"
 #include "rfTxTask.h"
-#include "../pins.h"
+#include "../const.h"
 
 /* Library includes. */
 #include <stdio.h>

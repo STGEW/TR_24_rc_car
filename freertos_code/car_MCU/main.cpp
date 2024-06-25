@@ -15,7 +15,7 @@
 #include "cameraServoTask.h"
 #include "hardware/gpio.h"
 
-#include "../pins.h"
+#include "../const.h"
 
 /* Library includes. */
 #include <stdio.h>
@@ -23,9 +23,6 @@
 #if ( mainRUN_ON_CORE == 1 )
 #include "pico/multicore.h"
 #endif
-
-/* Set mainCREATE_SIMPLE_BLINKY_DEMO_ONLY to one to run the simple blinky demo,
-or 0 to run the more comprehensive test and demo application. */
 
 /*-----------------------------------------------------------*/
 
@@ -53,6 +50,9 @@ extern void runIMURawTask( void *pvParameters );
 extern void setupCameraServoTask();
 extern void runCameraServoTask( void *pvParameters );
 
+// uartHandlerTask functions
+extern void prvSetupUartHandlerHardware();
+extern void uartHandlerTask( void *pvParameters );
 
 static void prvSetupHardware( void );
 
@@ -86,12 +86,8 @@ void core_1_tasks( void )
     xTaskCreate( runCameraServoTask, "cameraServoTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
-    // xTaskCreate( rfRxSimulatorTask,                     
-    //             "rfRxSimulatorTask",                     
-    //             configMINIMAL_STACK_SIZE,           
-    //             NULL,                               
-    //             tskIDLE_PRIORITY + 1,          
-    //             NULL );
+    xTaskCreate( uartHandlerTask, "uartHandlerTask",                     
+        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
     vTaskStartScheduler();
 

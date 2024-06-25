@@ -4,7 +4,7 @@
 #include "pico/stdlib.h"
 #include "semphr.h"
 #include "pico/binary_info.h"
-#include "../pins.h"
+#include "../const.h"
 
 
 int addr = 0x68;

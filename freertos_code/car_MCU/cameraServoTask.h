@@ -1,5 +1,4 @@
-#ifndef CAMERA_SERVO_TASK_H
-#define CAMERA_SERVO_TASK_H
+#pragma once
 
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -8,5 +7,3 @@
 extern SemaphoreHandle_t cameraServoSemaphore;
 // an angle for camera to rotate
 extern int cameraAngle;
-
-#endif /* CAMERA_SERVO_TASK_H */

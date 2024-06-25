@@ -1,9 +1,8 @@
-#ifndef DRIVER_TASK_H
-#define DRIVER_TASK_H
+#pragma once
 
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "../pins.h"
+#include "../const.h"
 
 /*
     USED DRIVER: tb6612fng
@@ -35,5 +34,3 @@ struct DriverControlData {
 
 extern SemaphoreHandle_t motorDriverSemaphore;
 extern struct DriverControlData driver;
-
-#endif /* DRIVER_TASK_H */

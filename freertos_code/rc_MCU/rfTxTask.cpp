@@ -1,11 +1,11 @@
 #include "rfTxTask.h"
 #include <stdio.h>
 #include <RF24.h>
-#include "../pins.h"
+#include "../const.h"
 
 // semaphore for reading data by commandsProcessor
 SemaphoreHandle_t rfTxSemaphore;
-struct JoystickRawData joystick = {0, 0};
+struct JoystickRawData joystick = {0, 0, false};
 
 RF24 radio(CE_PIN, CSN_PIN);
 bool role = true; // true = TX role, false = RX role
@@ -56,24 +56,34 @@ void runRfTxTask( void *pvParameters )
     TickType_t lastTXTicks = xTaskGetTickCount();
     TickType_t sinceLastTXTicks = 0;
     float sinceLastTXSec = 0.0;
+    float lastToggleSec =  xTaskGetTickCount() / configTICK_RATE_HZ;
 
     for( ;; )
     {
 
         if (xSemaphoreTake(rfTxSemaphore, 0) == pdTRUE) {
-            printf(
-                "joystick's values for processing are. x: %u, y: %u\n",
-                joystick.x,
-                joystick.y);
+            // printf(
+            //     "joystick's values for processing are. x: %u, y: %u\n",
+            //     joystick.x,
+            //     joystick.y);
 
             bool report = radio.write(&joystick, sizeof(joystick));         // transmit & save the report
             if (report) {
-                printf("Transmission successful!\n");
+                // printf("Transmission successful!\n");
                 lastTXTicks = xTaskGetTickCount();
-                gpio_put(RADIO_LED_PIN, 1);
+                if (joystick.ext_control == true) {
+                    if (xTaskGetTickCount() / configTICK_RATE_HZ - lastToggleSec >= 1.0) {
+                        // Switching LED state
+                        gpio_xor_mask(1u << RADIO_LED_PIN);
+                        lastToggleSec = xTaskGetTickCount() / configTICK_RATE_HZ;
+                    }
+                } else {
+                    gpio_put(RADIO_LED_PIN, 1);
+                }
+                    
             }
             else {
-                printf("Transmission failed or timed out\n");
+                // printf("Transmission failed or timed out\n");
                 sinceLastTXTicks = xTaskGetTickCount() - lastTXTicks;
                 sinceLastTXSec = sinceLastTXTicks / configTICK_RATE_HZ;
                 if (sinceLastTXSec > TX_LED_TIMEOUT_SEC) {
