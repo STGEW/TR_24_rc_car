@@ -90,19 +90,19 @@ void runMotorDriverTask( void *pvParameters )
     for( ;; )
     {
         if (xSemaphoreTake(motorDriverSemaphore, 0) == pdTRUE) {
-            printf(
-                "motor A direction is: %d duty cycle: %d\n",
-                driver.direction_A,
-                driver.duty_cycle_A);
+            // printf(
+            //     "motor A direction is: %d duty cycle: %d\n",
+            //     driver.direction_A,
+            //     driver.duty_cycle_A);
 
             setMotorDirection(AI1_PIN, AI2_PIN, driver.direction_A);
             pwm_set_gpio_level(
                 PWM_A_PIN, driver.duty_cycle_A);
 
-            printf(
-                "motor B direction is: %d duty cycle: %d\n",
-                driver.direction_B,
-                driver.duty_cycle_B);
+            // printf(
+            //     "motor B direction is: %d duty cycle: %d\n",
+            //     driver.direction_B,
+            //     driver.duty_cycle_B);
 
             setMotorDirection(BI1_PIN, BI2_PIN, driver.direction_B);
             pwm_set_gpio_level(

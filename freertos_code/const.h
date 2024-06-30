@@ -1,5 +1,8 @@
 #pragma once
 
+#define mainRUN_ON_CORE 1
+#define MOTOR_DRIVER_QUEUE_LENGTH 1
+
 #define IMU_I2C_SDA_PIN     2
 #define IMU_I2C_SCL_PIN     3
 #define UART_CTRL_TX_PIN    4
@@ -25,11 +28,7 @@
 
 #define UART_CTRL_ID        uart1
 #define UART_CTRL_BAUD_RATE 460800
-
-// UART PARSER
-#define UART_CMD_HEADER_SIZE  2
-#define UART_CMD_HEADER       "SV"
-#define UART_CMD_SIZE_BYTES   8
+#define UART_CTRL_BUFF_SIZE 256
 
 // JOYSTICK
 // contains raw measurements from joystick
@@ -67,7 +66,20 @@ How we interpret these values?
 
 
 // Engine Power state
+const char UART_ENGINES_DATA_HEADER[] = {'A', 'A'};
+
+// left -100 ... 100
+// right -100 ... 100
 struct __attribute__((__packed__)) EnginesPwr {
     int32_t left;
     int32_t right;
+};
+
+// Driver data
+// duty cycle 0 .. 65 535
+struct DriverControlData {
+    int direction_A;
+    int direction_B;
+    int duty_cycle_A;
+    int duty_cycle_B;
 };

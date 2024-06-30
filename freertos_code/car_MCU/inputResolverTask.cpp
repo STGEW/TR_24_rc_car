@@ -3,16 +3,16 @@
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-SemaphoreHandle_t inputResolverSemaphore;
+SemaphoreHandle_t inputResolverMutex;
 
 bool ext_control = false;
 struct EnginesPwr rf_engines_pwr = {0, 0};
 TickType_t lastRFDataTick = 0.0;
-bool rfDataFresh = false;
 
 struct EnginesPwr uart_engines_pwr;
-TickType_t lastUARTDataTick = 0.0;
-bool uartDataFresh = false;
+
+
+void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
 
 
 // initialize required for motor pins
@@ -27,7 +27,6 @@ void setupInputResolverTask( void )
 
 void runInputResolverTask( void *pvParameters )
 {
-
     TickType_t xNextWakeTime;
     const unsigned long ulValueToSend = 100UL;
 
@@ -41,73 +40,76 @@ void runInputResolverTask( void *pvParameters )
     TickType_t sinceLastCmdTicks = 0;
     float sinceLastCmdSec = 0.0;
 
+    bool _ext_control;
+    struct EnginesPwr _rf_engines_pwr;
+    TickType_t _lastRFDataTick;
+
+    struct EnginesPwr _uart_engines_pwr;
+
+    auto secondsSinceLastTick = [](TickType_t lastTick) -> float {
+        TickType_t diffTicks = xTaskGetTickCount() - lastTick;
+        float diffSec = diffTicks / configTICK_RATE_HZ;
+        return diffSec;
+    };
+
     for( ;; )
     {
+        // just polling
+        if (xSemaphoreTake(inputResolverMutex, 0) == pdTRUE) {
+            _ext_control = ext_control;
+            _rf_engines_pwr = rf_engines_pwr;
+            _lastRFDataTick = lastRFDataTick;
 
-        if (xSemaphoreTake(inputResolverSemaphore, 0) == pdTRUE) {
-            gpio_put(RADIO_LED_PIN, 1);
-            lastCmdTicks = xTaskGetTickCount();
-            printf(
-                "joystick's values for processing are. x: %u, y: %u\n",
-                joystick.x,
-                joystick.y);
-
-            // centered values
-            // forward -= 2048;
-            // turn -= 2048;
-
-           
-
-            // Step 3 - convert powers to what our driver expects
-            printf(
-                "Step 3. Convert power values to what our driver is expecting.\n");
-            if (left_side_power == 0) {
-                driver.direction_A = OFF;
-                driver.duty_cycle_A = 0;
-            } else if (left_side_power > 0) {
-                driver.direction_A = FORWARD;
-                driver.duty_cycle_A = left_side_power * DRIVER_COEF;
-            } else if (left_side_power < 0) {
-                driver.direction_A = REVERSE;
-                driver.duty_cycle_A = -1 * left_side_power * DRIVER_COEF;
-            }
-
-            if (right_side_power == 0) {
-                driver.direction_B = OFF;
-                driver.duty_cycle_B = 0;
-            } else if (right_side_power > 0) {
-                driver.direction_B = FORWARD;
-                driver.duty_cycle_B = right_side_power * DRIVER_COEF;
-            } else if (right_side_power < 0) {
-                driver.direction_B = REVERSE;
-                driver.duty_cycle_B = -1 * right_side_power * DRIVER_COEF;
-            }
-            printf(
-                "motor A direction is: %d duty cycle: %d\n",
-                driver.direction_A,
-                driver.duty_cycle_A);
-            printf(
-                "motor B direction is: %d duty cycle: %d\n",
-                driver.direction_B,
-                driver.duty_cycle_B);
-
-            xSemaphoreGive(motorDriverSemaphore);
-
-        } else {
-            sinceLastCmdTicks = xTaskGetTickCount() - lastCmdTicks;
-            sinceLastCmdSec = sinceLastCmdTicks / configTICK_RATE_HZ;
-            if (sinceLastCmdSec > JOYSTICK_TIMEOUT_SEC) {
-                driver.direction_A = OFF;
-                driver.direction_B = OFF;
-                xSemaphoreGive(motorDriverSemaphore);
-                lastCmdTicks = xTaskGetTickCount();
-                gpio_put(RADIO_LED_PIN, 0);
-            }
-            // printf("commandsProcessorTask didn't get a semaphore \n");
+            _uart_engines_pwr = uart_engines_pwr;
+            xSemaphoreGive(inputResolverMutex);
         }
 
-        // pdMS_TO_TICKS( 1000 )
-        // 10 msec delay ~ 100 Hz
-        vTaskDelay(pdMS_TO_TICKS( 10 ));
+        float sec = secondsSinceLastTick(_lastRFDataTick);
+        if (sec > JOYSTICK_TIMEOUT_SEC) {
+            // no data from joystick since reasonable amount of time
+            gpio_put(RADIO_LED_PIN, 0);
+            // stopping the car
+            driver.direction_A = OFF;
+            driver.direction_B = OFF;
+        } else {
+            gpio_put(RADIO_LED_PIN, 1);
+            // fresh data from joystick
+            if (_ext_control) {
+                dataEnginesToDriver(_uart_engines_pwr, driver);
+            } else {
+                dataEnginesToDriver(_rf_engines_pwr, driver);
+            }
+        }
+        // printf(
+        //     "motor A direction is: %d duty cycle: %d\n",
+        //     driver.direction_A,
+        //     driver.duty_cycle_A);
+        // printf(
+        //     "motor B direction is: %d duty cycle: %d\n",
+        //     driver.direction_B,
+        //     driver.duty_cycle_B);
+
+        xSemaphoreGive(motorDriverSemaphore);
+
+        // 50 msec delay ~ 20 Hz
+        vTaskDelay(pdMS_TO_TICKS( 50 ));
     }
+}
+
+void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver) {
+    auto helper = [](int32_t e, int & dir, int & duty) -> void {
+        if (e == 0) {
+            dir = OFF;
+            duty = 0;
+        } else if (e > 0) {
+            dir = FORWARD;
+            duty = e * DRIVER_COEF;
+        } else if (e < 0) {
+            dir = REVERSE;
+            duty = -1 * e * DRIVER_COEF;
+        }
+    };
+
+    helper(engines.left, driver.direction_A, driver.duty_cycle_A);
+    helper(engines.right, driver.direction_B, driver.duty_cycle_B);
 }

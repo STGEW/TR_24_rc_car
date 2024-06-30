@@ -3,15 +3,16 @@
 #include "pico/stdlib.h"
 #include "hardware/uart.h"
 #include "task.h"
-#include "msgParser.h"
 
+#include "enginesDataParser.h"
 #include "inputResolverTask.h"
 #include "../const.h"
 
-Parser parser = Parser();
+EnginesDataParser parser = EnginesDataParser();
 
+uint8_t uart_buffer[UART_CTRL_BUFF_SIZE];
 
-void prvSetupUartHandlerHardware()
+void setupUartRxHardware()
 {
     uart_init(UART_CTRL_ID, UART_CTRL_BAUD_RATE);
     gpio_set_function(UART_CTRL_TX_PIN, GPIO_FUNC_UART);
@@ -19,17 +20,31 @@ void prvSetupUartHandlerHardware()
 }
 
 
-void uartHandlerTask(void *pvParameters) {
+void runUartRxTask(void *pvParameters) {
     uint8_t rx_byte;
+    size_t bytes_to_read;
     for( ;; )
     {
         // Read a byte from UART
-        if (uart_is_readable(UART_CTRL_ID)) {
-            rx_byte = uart_getc(UART_CTRL_ID);
-            // Process received byte, for example, print it
-            printf("Received: %c\n", rx_byte);
+        bytes_to_read = uart_is_readable(UART_CTRL_ID);
+        if (bytes_to_read > UART_CTRL_BUFF_SIZE) {
+            printf(
+                "WARNING! UART is reading data slower then data appears. "
+                "Bytes to read: %d, buffer size: %d\n",
+                bytes_to_read, UART_CTRL_BUFF_SIZE);
+        }
+        if (bytes_to_read) {
+            for (int i=0; i < bytes_to_read; i++) {
+                uart_buffer[i] = uart_getc(UART_CTRL_ID);
+                // Process received byte, for example, print it
+            }
             if (xSemaphoreTake(inputResolverMutex, portMAX_DELAY) == pdTRUE) {
-                bool res = parser.parseMessage(rx_byte, &message);
+                for (int i=0; i < bytes_to_read; i++) {
+                    if (parser.parse(uart_buffer[i], uart_engines_pwr)) {
+                        lastRFDataTick = xTaskGetTickCount();
+                    }
+                }
+                xSemaphoreGive(inputResolverMutex);
             }
         }
         vTaskDelay(pdMS_TO_TICKS(10)); // Adjust delay as needed

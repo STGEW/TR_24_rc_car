@@ -29,7 +29,7 @@ add_executable(main_car_mcu
         uartRxTask.cpp
         rfRxTask.cpp
         IntQueueTimer.c
-        msgParser.cpp
+        enginesDataParser.cpp
         RegTest.s
         /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/blocktim.c
         /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/countsem.c

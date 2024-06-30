@@ -9,9 +9,8 @@
 #include "IntSemTest.h"
 #include "TaskNotify.h"
 
-#include "main.h"
 #include "motorDriverTask.h"
-#include "joystickHandlerTask.h"
+#include "inputResolverTask.h"
 #include "cameraServoTask.h"
 #include "hardware/gpio.h"
 
@@ -30,17 +29,13 @@
 extern void setupRfRxTask( void );
 extern void runRfRxTask( void *pvParameters );
 
-// joystick simulator task
-extern void prvSetupRFSimulatorHardware();
-extern void rfRxSimulatorTask( void *pvParameters );
-
 // motorDriverTask functions
 extern void setupMotorDriverTask( void );
 extern void runMotorDriverTask( void *pvParameters );
 
-// joystickHanlderTask functions
-extern void setupJoystickHandlerTask( void );
-extern void runJoystickHandlerTask( void *pvParameters );
+// inputResolverTask functions
+extern void setupInputResolverTask( void );
+extern void runInputResolverTask( void *pvParameters );
 
 // imuRawTask functions
 extern void setupIMURawTask();
@@ -51,8 +46,8 @@ extern void setupCameraServoTask();
 extern void runCameraServoTask( void *pvParameters );
 
 // uartHandlerTask functions
-extern void prvSetupUartHandlerHardware();
-extern void uartHandlerTask( void *pvParameters );
+extern void setupUartRxHardware();
+extern void runUartRxTask( void *pvParameters );
 
 static void prvSetupHardware( void );
 
@@ -68,13 +63,13 @@ void core_1_tasks( void )
 {
 
     motorDriverSemaphore = xSemaphoreCreateBinary();
-    joystickHandlerSemaphore = xSemaphoreCreateBinary();
+    inputResolverMutex = xSemaphoreCreateMutex();
     cameraServoSemaphore = xSemaphoreCreateBinary();
 
     xTaskCreate( runMotorDriverTask, "motorDriverTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
-    xTaskCreate( runJoystickHandlerTask, "joystickHandlerTask",
+    xTaskCreate( runInputResolverTask, "runInputResolverTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
     xTaskCreate( runRfRxTask, "rfRxTask",                     
@@ -86,7 +81,7 @@ void core_1_tasks( void )
     xTaskCreate( runCameraServoTask, "cameraServoTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
-    xTaskCreate( uartHandlerTask, "uartHandlerTask",                     
+    xTaskCreate( runUartRxTask, "runUartRxTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
     vTaskStartScheduler();
@@ -112,9 +107,8 @@ static void prvSetupHardware( void )
     setupMotorDriverTask();
     setupRfRxTask();
     setupIMURawTask();
-    setupJoystickHandlerTask();
-    // prvSetupRFSimulatorHardware();
-    // prvSetupUART();
+    setupInputResolverTask();
+    setupUartRxHardware();
     setupCameraServoTask();
 
     gpio_init(BOOT_LED_PIN);

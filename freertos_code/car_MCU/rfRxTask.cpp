@@ -46,7 +46,6 @@ void runRfRxTask( void *pvParameters )
     TickType_t xNextWakeTime;
     const unsigned long ulValueToSend = 100UL;
 
-    /* Remove compiler warning about unused parameter. */
     ( void ) pvParameters;
 
     /* Initialise xNextWakeTime - this only needs to be done once. */
@@ -54,19 +53,20 @@ void runRfRxTask( void *pvParameters )
 
     for( ;; )
     {
-        // This device is a RX node
         uint8_t pipe;
         if (radio.available()) {
-             // is there a payload? get the pipe number that recieved it
             uint8_t bytes = radio.getPayloadSize(); // get the size of the payload
             radio.read(&joystick, bytes);            // fetch payload from FIFO
-            // print the size of the payload, the pipe number, payload's value
             printf("RF Received %d bytes: %u %u %s\n",
                 bytes,
                 joystick.x, joystick.y,
                 joystick.ext_control ? "true" : "false");
+
+            lastRFDataTick = xTaskGetTickCount();
             if (xSemaphoreTake(inputResolverMutex, portMAX_DELAY) == pdTRUE) {
-                convertJoystickToEngineState(&joystick, &rf_engines_pwr);
+                convertJoystickToEngineState(joystick, rf_engines_pwr);
+                ext_control = joystick.ext_control;
+                xSemaphoreGive(inputResolverMutex);
             }
         } else {
             // printf("RADIO IS NOT AVAIL\n");
@@ -149,5 +149,4 @@ void convertJoystickToEngineState(JoystickRawData & joy, EnginesPwr & pwr) {
     //     "After limiting within -100..100; left_side_power: %d right_side_power: %d\n",
     //     left_side_power,
     //     right_side_power);
-    return pwr;
 }

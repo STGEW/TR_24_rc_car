@@ -23,14 +23,5 @@
 
 #define DRIVER_COEF     65535 / 100
 
-
-// duty cycle 0 .. 65 535
-struct DriverControlData {
-    int direction_A;
-    int direction_B;
-    int duty_cycle_A;
-    int duty_cycle_B;
-};
-
 extern SemaphoreHandle_t motorDriverSemaphore;
 extern struct DriverControlData driver;
