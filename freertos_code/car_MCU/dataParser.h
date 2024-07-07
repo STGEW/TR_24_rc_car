@@ -4,18 +4,18 @@
 #include <cstddef> 
 #include "../const.h"
 
-#define body_size       sizeof(EnginesPwr)
-#define header_size     sizeof(UART_ENGINES_DATA_HEADER)
+#define body_size       sizeof(PathPlanningData)
+#define header_size     sizeof(UART_PP_DATA_HEADER)
 
 enum ParserState {
     HEADER,
     BODY
 };
 
-class EnginesDataParser {
+class DataParser {
 
 public:
-    bool parse(const char symbol, EnginesPwr & e);
+    bool parse(const char symbol, PathPlanningData & e);
 
 private:
 

@@ -1,15 +1,22 @@
-#include "inputResolverTask.h"
-#include "motorDriverTask.h"
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-SemaphoreHandle_t inputResolverMutex;
+#include "inputResolverTask.h"
+#include "sensorFusionTask.h"
+#include "motorDriver.h"
+#include "controller.h"
+#include "../utils.h"
+
+
+SemaphoreHandle_t inputResolverRfDataMutex;
+SemaphoreHandle_t inputResolverPathPlanningMutex;
 
 bool ext_control = false;
 struct EnginesPwr rf_engines_pwr = {0, 0};
 TickType_t lastRFDataTick = 0.0;
 
-struct EnginesPwr uart_engines_pwr;
+PathPlanningData inp_res_pp_data = {0,0,0,0};
+bool pp_updated = false;
 
 
 void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
@@ -41,27 +48,32 @@ void runInputResolverTask( void *pvParameters )
     float sinceLastCmdSec = 0.0;
 
     bool _ext_control;
-    struct EnginesPwr _rf_engines_pwr;
+    struct EnginesPwr _engines_pwr;
     TickType_t _lastRFDataTick;
 
-    struct EnginesPwr _uart_engines_pwr;
+    PathPlanningData _path_planning_data;
+    bool _pp_updated;
 
-    auto secondsSinceLastTick = [](TickType_t lastTick) -> float {
-        TickType_t diffTicks = xTaskGetTickCount() - lastTick;
-        float diffSec = diffTicks / configTICK_RATE_HZ;
-        return diffSec;
-    };
+    DriverControlData driver;
+    SensorsData sensors_data;
+
+    Controller controller = Controller();
 
     for( ;; )
     {
-        // just polling
-        if (xSemaphoreTake(inputResolverMutex, 0) == pdTRUE) {
+        // non blocking!
+        if (xSemaphoreTake(inputResolverRfDataMutex, 0) == pdTRUE) {
             _ext_control = ext_control;
-            _rf_engines_pwr = rf_engines_pwr;
+            _engines_pwr = rf_engines_pwr;
             _lastRFDataTick = lastRFDataTick;
+            xSemaphoreGive(inputResolverRfDataMutex);
+        }
 
-            _uart_engines_pwr = uart_engines_pwr;
-            xSemaphoreGive(inputResolverMutex);
+        // non blocking!
+        if (xSemaphoreTake(inputResolverPathPlanningMutex, 0) == pdTRUE) {
+            _pp_updated = pp_updated;
+            _path_planning_data = inp_res_pp_data;
+            xSemaphoreGive(inputResolverPathPlanningMutex);
         }
 
         float sec = secondsSinceLastTick(_lastRFDataTick);
@@ -75,21 +87,21 @@ void runInputResolverTask( void *pvParameters )
             gpio_put(RADIO_LED_PIN, 1);
             // fresh data from joystick
             if (_ext_control) {
-                dataEnginesToDriver(_uart_engines_pwr, driver);
+                if ( true == _pp_updated ) {
+                    controller.start(_path_planning_data);
+                    reset_sensor_fusion_task();
+                } else {
+                    read_fused_sensors_data(sensors_data);
+                    controller.update(_engines_pwr, sensors_data);
+                    dataEnginesToDriver(_engines_pwr, driver);
+                    runMotorDriver(driver);
+                }
             } else {
-                dataEnginesToDriver(_rf_engines_pwr, driver);
+                //somehow synchronize with driver task
+                dataEnginesToDriver(_engines_pwr, driver);
+                runMotorDriver(driver);
             }
         }
-        // printf(
-        //     "motor A direction is: %d duty cycle: %d\n",
-        //     driver.direction_A,
-        //     driver.duty_cycle_A);
-        // printf(
-        //     "motor B direction is: %d duty cycle: %d\n",
-        //     driver.direction_B,
-        //     driver.duty_cycle_B);
-
-        xSemaphoreGive(motorDriverSemaphore);
 
         // 50 msec delay ~ 20 Hz
         vTaskDelay(pdMS_TO_TICKS( 50 ));

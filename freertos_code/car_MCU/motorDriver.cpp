@@ -1,14 +1,7 @@
-#include "FreeRTOS.h"
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
-#include "motorDriverTask.h"
+#include "motorDriver.h"
 #include <stdio.h>
-
-
-// semaphore for reading driver control
-SemaphoreHandle_t motorDriverSemaphore;
-// contains values for driver
-struct DriverControlData driver = {OFF, OFF, 0, 0};
 
 
 void setMotorDirection(int I1_PIN, int I2_PIN, int direction) {
@@ -46,7 +39,7 @@ void pwm_init_pin(uint8_t pin) {
 
 
 // initialize required for motor pins
-void setupMotorDriverTask( void )
+void setupMotorDriver( void )
 {
     // intially OFF
     gpio_init(AI1_PIN);
@@ -72,46 +65,13 @@ void setupMotorDriverTask( void )
 }
 
 
-void runMotorDriverTask( void *pvParameters )
+void runMotorDriver( DriverControlData & data )
 {
+    setMotorDirection(AI1_PIN, AI2_PIN, data.direction_A);
+    pwm_set_gpio_level(
+        PWM_A_PIN, data.duty_cycle_A);
 
-    TickType_t xNextWakeTime;
-    const unsigned long ulValueToSend = 100UL;
-
-    /* Remove compiler warning about unused parameter. */
-    ( void ) pvParameters;
-
-    /* Initialise xNextWakeTime - this only needs to be done once. */
-    xNextWakeTime = xTaskGetTickCount();
-
-    setMotorDirection(AI1_PIN, AI2_PIN, OFF);
-    setMotorDirection(BI1_PIN, BI2_PIN, OFF);
-    
-    for( ;; )
-    {
-        if (xSemaphoreTake(motorDriverSemaphore, 0) == pdTRUE) {
-            // printf(
-            //     "motor A direction is: %d duty cycle: %d\n",
-            //     driver.direction_A,
-            //     driver.duty_cycle_A);
-
-            setMotorDirection(AI1_PIN, AI2_PIN, driver.direction_A);
-            pwm_set_gpio_level(
-                PWM_A_PIN, driver.duty_cycle_A);
-
-            // printf(
-            //     "motor B direction is: %d duty cycle: %d\n",
-            //     driver.direction_B,
-            //     driver.duty_cycle_B);
-
-            setMotorDirection(BI1_PIN, BI2_PIN, driver.direction_B);
-            pwm_set_gpio_level(
-                PWM_B_PIN, driver.duty_cycle_B);
-        } else {
-            // printf("motorDriverTask didn't get a semaphore \n");
-        }
-        
-        // 10 msec delay ~ 100 Hz
-        vTaskDelay(pdMS_TO_TICKS( 10 ));
-    }
+    setMotorDirection(BI1_PIN, BI2_PIN, data.direction_B);
+    pwm_set_gpio_level(
+        PWM_B_PIN, data.duty_cycle_B);
 }

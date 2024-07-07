@@ -22,14 +22,18 @@ pico_sdk_init()
 
 add_executable(main_car_mcu
         main.cpp
-        motorDriverTask.cpp
+        motorDriver.cpp
         inputResolverTask.cpp
         cameraServoTask.cpp
         imuRawTask.cpp
-        uartRxTask.cpp
+        uartHandlerTask.cpp
+        sensorFusionTask.cpp
         rfRxTask.cpp
         IntQueueTimer.c
-        enginesDataParser.cpp
+        dataParser.cpp
+        odometerTask.cpp
+        controller.cpp
+        ../utils.cpp
         RegTest.s
         /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/blocktim.c
         /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/countsem.c

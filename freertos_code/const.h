@@ -1,7 +1,8 @@
 #pragma once
 
+#include <stdint.h>
+
 #define mainRUN_ON_CORE 1
-#define MOTOR_DRIVER_QUEUE_LENGTH 1
 
 #define IMU_I2C_SDA_PIN     2
 #define IMU_I2C_SCL_PIN     3
@@ -22,6 +23,8 @@
 #define CSN_PIN             21
 #define X_AXIS_PIN          26
 #define Y_AXIS_PIN          27
+#define ODOMETER_LEFT_PIN   26
+#define ODOMETER_RIGHT_PIN  27
 
 #define ADC_CHANNEL_X       0
 #define ADC_CHANNEL_Y       1
@@ -33,14 +36,10 @@
 // JOYSTICK
 // contains raw measurements from joystick
 struct __attribute__((__packed__)) JoystickRawData {
-    uint x;
-    uint y;
+    uint32_t x;
+    uint32_t y;
     bool ext_control;
 };
-
-// BUTTON STATES
-#define BUTTON_DN 0
-#define BUTTON_UP 1
 
 // Conversion from joystick to engine state
 /*
@@ -66,8 +65,9 @@ How we interpret these values?
 
 
 // Engine Power state
-const char UART_ENGINES_DATA_HEADER[] = {'A', 'A'};
+// const char UART_ENGINES_DATA_HEADER[] = {'A', 'A'};
 
+// Do I still need it?
 // left -100 ... 100
 // right -100 ... 100
 struct __attribute__((__packed__)) EnginesPwr {
@@ -82,4 +82,22 @@ struct DriverControlData {
     int direction_B;
     int duty_cycle_A;
     int duty_cycle_B;
+};
+
+// Path planning task in m
+const char UART_PP_DATA_HEADER[] = {'B', 'B'};
+struct __attribute__((__packed__)) PathPlanningData {
+    float x;
+    float y;
+    float v_x;
+    float v_y;
+};
+
+// everything in meters + radians
+struct SensorsData {
+    float d_x;
+    float d_y;
+    float d_vx;
+    float d_vy;
+    float d_heading;
 };

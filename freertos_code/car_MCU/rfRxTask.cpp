@@ -5,9 +5,9 @@
 
 
 // instantiate an object for the nRF24L01 transceiver
-RF24 radio(CE_PIN, CSN_PIN);
-bool role = false; // true = TX role, false = RX role
-struct JoystickRawData joystick;
+static RF24 radio(CE_PIN, CSN_PIN);
+static bool role = false; // true = TX role, false = RX role
+static struct JoystickRawData joystick;
 
 
 void convertJoystickToEngineState(JoystickRawData & joy, EnginesPwr & pwr);
@@ -63,10 +63,10 @@ void runRfRxTask( void *pvParameters )
                 joystick.ext_control ? "true" : "false");
 
             lastRFDataTick = xTaskGetTickCount();
-            if (xSemaphoreTake(inputResolverMutex, portMAX_DELAY) == pdTRUE) {
+            if (xSemaphoreTake(inputResolverRfDataMutex, portMAX_DELAY) == pdTRUE) {
                 convertJoystickToEngineState(joystick, rf_engines_pwr);
                 ext_control = joystick.ext_control;
-                xSemaphoreGive(inputResolverMutex);
+                xSemaphoreGive(inputResolverRfDataMutex);
             }
         } else {
             // printf("RADIO IS NOT AVAIL\n");

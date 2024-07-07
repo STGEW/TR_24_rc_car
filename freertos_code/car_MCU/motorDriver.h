@@ -1,7 +1,5 @@
 #pragma once
 
-#include "FreeRTOS.h"
-#include "semphr.h"
 #include "../const.h"
 
 /*
@@ -23,5 +21,5 @@
 
 #define DRIVER_COEF     65535 / 100
 
-extern SemaphoreHandle_t motorDriverSemaphore;
-extern struct DriverControlData driver;
+void setupMotorDriver( void );
+void runMotorDriver( DriverControlData & data );
