@@ -4,11 +4,32 @@
 #include "pico/stdlib.h"
 #include "semphr.h"
 #include "pico/binary_info.h"
-#include "../const.h"
 
+#include "../const.h"
+#include "../utils.h"
+#include "imuRawTask.h"
+
+
+SemaphoreHandle_t imuMutex;
 
 int addr = 0x68;
 
+float _vel[3] = {0.0, 0.0, 0.0};
+float _pos[3]= {0.0, 0.0, 0.0};
+float _angle[3] = {0.0, 0.0, 0.0};
+float _angle_speed[3] = {0.0, 0.0, 0.0};
+
+void read_imu_data(float * pos, float * vel, float * angle, float * angle_speed) {
+    if (xSemaphoreTake(imuMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0; i < 3; i++) {
+            pos[i] = _pos[i]; _pos[i] = 0;
+            vel[i] = _vel[i]; _vel[i] = 0;
+            angle[i] = _angle[i]; _angle[i] = 0;
+            angle_speed[i] = _angle_speed[i]; _angle_speed[i] = 0;
+        }
+        xSemaphoreGive(imuMutex);
+    }
+}
 void mpu6050_init() {
 
     uint8_t buf_reset[] = {0x6B, 0x00};
@@ -23,7 +44,6 @@ void mpu6050_init() {
     i2c_write_blocking(i2c1, addr, buf_gyro, 2, false);
 }
 
-
 void setupIMURawTask() {
 
  	// This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
@@ -35,7 +55,6 @@ void setupIMURawTask() {
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, GPIO_FUNC_I2C));
 }
-
 
 void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
     // For this particular device, we send the device the register we want to read
@@ -82,23 +101,44 @@ void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
 void runIMURawTask( void *pvParameters ) 
 {
 
-    TickType_t xNextWakeTime;
+    TickType_t xNextWakeTime = xTaskGetTickCount();
     const unsigned long ulValueToSend = 100UL;
 
     /* Remove compiler warning about unused parameter. */
     ( void ) pvParameters;
 
     /* Initialise xNextWakeTime - this only needs to be done once. */
-    xNextWakeTime = xTaskGetTickCount();
+    TickType_t last_read_tick = 0;
 
     float acceleration[3], gyro[3], temp;
+    float sec_since_last_read = 0.0;
 
     mpu6050_init();
 
     for( ;; )
     {
-
         mpu6050_read_raw(acceleration, gyro, &temp);
+        // TBD - wait mutex forever
+        if (0 == last_read_tick) {
+            // first call
+            last_read_tick = xTaskGetTickCount();
+        } else {
+            if (xSemaphoreTake(imuMutex, portMAX_DELAY) == pdTRUE) {
+                sec_since_last_read = secondsSinceLastTick(last_read_tick);
+                for (int i = 0; i++; i < 3) {
+                    _vel[i] = _vel[i] + sec_since_last_read * acceleration[i];
+                    _pos[i] = _pos[i] + sec_since_last_read * _vel[i];
+                    printf("vel [%d]: %f, pos [%d]: %f\n",
+                        i, _vel[i], 
+                        i, _pos[i]);
+                    // angle_speed[i] = angle_speed[i] + gyro[i];
+                    // TBD - how to update angle speed and angle from gyro
+                }
+                xSemaphoreGive(imuMutex);
+            }
+            last_read_tick = xTaskGetTickCount();
+        }
+        
 
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
         // See the datasheet for more information

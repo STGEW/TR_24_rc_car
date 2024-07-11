@@ -9,10 +9,14 @@
 #include "IntSemTest.h"
 #include "TaskNotify.h"
 
-#include "motorDriverTask.h"
 #include "inputResolverTask.h"
 #include "cameraServoTask.h"
 #include "hardware/gpio.h"
+#include "sensorFusionTask.h"
+#include "odometerTask.h"
+#include "uartHandlerTask.h"
+#include "imuRawTask.h"
+
 
 #include "../const.h"
 
@@ -30,8 +34,7 @@ extern void setupRfRxTask( void );
 extern void runRfRxTask( void *pvParameters );
 
 // motorDriverTask functions
-extern void setupMotorDriverTask( void );
-extern void runMotorDriverTask( void *pvParameters );
+extern void setupMotorDriver( void );
 
 // inputResolverTask functions
 extern void setupInputResolverTask( void );
@@ -46,8 +49,18 @@ extern void setupCameraServoTask();
 extern void runCameraServoTask( void *pvParameters );
 
 // uartHandlerTask functions
-extern void setupUartRxHardware();
-extern void runUartRxTask( void *pvParameters );
+extern void setupUartHandlerHardware();
+extern void runUartHandlerTask(void *pvParameters);
+
+// odometerTask functions
+extern TaskHandle_t xOdometerLeftTaskHandle;
+extern TaskHandle_t xOdometerRightTaskHandle;
+extern void setupOdometerTask();
+extern void runOdometerLeftTask(void *pvParameters );
+extern void runOdometerRightTask(void *pvParameters );
+
+//sensorFusionTask
+extern void runSensorFusionTask(void *pvParameters );
 
 static void prvSetupHardware( void );
 
@@ -62,12 +75,21 @@ void vApplicationTickHook( void );
 void core_1_tasks( void )
 {
 
-    motorDriverSemaphore = xSemaphoreCreateBinary();
-    inputResolverMutex = xSemaphoreCreateMutex();
     cameraServoSemaphore = xSemaphoreCreateBinary();
 
-    xTaskCreate( runMotorDriverTask, "motorDriverTask",
-        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+    inputResolverRfDataMutex = xSemaphoreCreateMutex();
+    inputResolverPathPlanningMutex = xSemaphoreCreateMutex();
+    sensorFusionMutex = xSemaphoreCreateMutex();
+    odometerMutex = xSemaphoreCreateMutex();
+    uartMutex = xSemaphoreCreateMutex();
+    imuMutex = xSemaphoreCreateMutex();
+
+    // Create the queue
+    uartTxQueue = xQueueCreate(10, sizeof(char*));
+    if (uartTxQueue == NULL) {
+        printf("ERROR! uartTxQueue can't be created\n");
+        return;
+    }
 
     xTaskCreate( runInputResolverTask, "runInputResolverTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
@@ -81,8 +103,19 @@ void core_1_tasks( void )
     xTaskCreate( runCameraServoTask, "cameraServoTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
-    xTaskCreate( runUartRxTask, "runUartRxTask",                     
+    xTaskCreate( runUartHandlerTask, "runUartHandlerTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+
+    xTaskCreate(runOdometerLeftTask, "runOdometerLeftTask",
+        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,
+        &xOdometerLeftTaskHandle);
+
+    xTaskCreate(runOdometerRightTask, "runOdometerRightTask",
+        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,
+        &xOdometerRightTaskHandle);
+
+    xTaskCreate(runSensorFusionTask, "runSensorFusionTask",
+        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
     vTaskStartScheduler();
 
@@ -104,12 +137,13 @@ int main( void )
 static void prvSetupHardware( void )
 {
     stdio_init_all();
-    setupMotorDriverTask();
+    setupMotorDriver();
     setupRfRxTask();
     setupIMURawTask();
     setupInputResolverTask();
-    setupUartRxHardware();
+    setupUartHandlerHardware();
     setupCameraServoTask();
+    setupOdometerTask();
 
     gpio_init(BOOT_LED_PIN);
     gpio_set_dir(BOOT_LED_PIN, GPIO_OUT);
