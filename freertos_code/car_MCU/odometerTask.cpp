@@ -6,6 +6,8 @@
 #include <stdio.h>
 
 #include "../const.h"
+#include "../utils.h"
+
 
 SemaphoreHandle_t odometerMutex;
 
@@ -19,24 +21,21 @@ TaskHandle_t xOdometerRightTaskHandle;
 
 void read_odometer_data(uint32_t & _odo_left_count, uint32_t & _odo_right_count) {
     if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
-        _odo_left_count = odometer_left_count;
+        _odo_left_count += odometer_left_count;
         odometer_left_count = 0;
-        _odo_right_count = odometer_right_count;
+        _odo_right_count += odometer_right_count;
         odometer_right_count = 0;
         xSemaphoreGive(odometerMutex);
     }
 }
 
-void odometer_gpio_callback(uint gpio, uint32_t events)
-{
+void odometer_gpio_callback(uint gpio, uint32_t events) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    // Check if the interrupt was triggered by the specific pin
-    if (gpio == ODOMETER_LEFT_PIN) {
+    if ((gpio == ODOMETER_LEFT_PIN) && (events & GPIO_IRQ_EDGE_FALL)) {
         vTaskNotifyGiveFromISR(xOdometerLeftTaskHandle, &xHigherPriorityTaskWoken);
-    } else if (gpio == ODOMETER_RIGHT_PIN) {
+    } else if ((gpio == ODOMETER_RIGHT_PIN) && (events & GPIO_IRQ_EDGE_FALL)) {
         vTaskNotifyGiveFromISR(xOdometerRightTaskHandle, &xHigherPriorityTaskWoken);
     }
-    // Force a context switch if needed
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -48,7 +47,7 @@ void setupOdometerTask( void ) {
         gpio_pull_up(pin);
         gpio_set_irq_enabled_with_callback(
             pin,
-            GPIO_IRQ_EDGE_RISE,
+            GPIO_IRQ_EDGE_FALL,
             true,
             &odometer_gpio_callback);
     };
@@ -60,31 +59,21 @@ void setupOdometerTask( void ) {
 void runOdometerLeftTask( void *pvParameters )
 {
     for (;;) {
-        // Wait for the notification from the ISR
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        // with mutex ?
         if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
             odometer_left_count++;
             xSemaphoreGive(odometerMutex);
         }
-        printf(
-            "odometer_left_count is: %d\n",
-            odometer_left_count);
     }
 }
 
 void runOdometerRightTask( void *pvParameters )
 {
     for (;;) {
-        // Wait for the notification from the ISR
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
             odometer_right_count++;
             xSemaphoreGive(odometerMutex);
         }
-        printf(
-            "odometer_right_count is: %d\n",
-            odometer_right_count);
     }
 }
-

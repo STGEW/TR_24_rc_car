@@ -57,10 +57,10 @@ void runRfRxTask( void *pvParameters )
         if (radio.available()) {
             uint8_t bytes = radio.getPayloadSize(); // get the size of the payload
             radio.read(&joystick, bytes);            // fetch payload from FIFO
-            printf("RF Received %d bytes: %u %u %s\n",
-                bytes,
-                joystick.x, joystick.y,
-                joystick.ext_control ? "true" : "false");
+            // printf("RF Received %d bytes: %u %u %s\n",
+            //     bytes,
+            //     joystick.x, joystick.y,
+            //     joystick.ext_control ? "true" : "false");
 
             lastRFDataTick = xTaskGetTickCount();
             if (xSemaphoreTake(inputResolverRfDataMutex, portMAX_DELAY) == pdTRUE) {

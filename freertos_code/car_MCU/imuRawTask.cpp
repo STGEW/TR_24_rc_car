@@ -22,6 +22,16 @@ float _angle_speed[3] = {0.0, 0.0, 0.0};
 void read_imu_data(float * pos, float * vel, float * angle, float * angle_speed) {
     if (xSemaphoreTake(imuMutex, portMAX_DELAY) == pdTRUE) {
         for (int i = 0; i < 3; i++) {
+            /*
+        printf("pos x: %f y: %f z: %f\n",
+            _pos[0], _pos[1], _pos[2]);
+        printf("vel x: %f y: %f z: %f\n",
+            _vel[0], _vel[1], _vel[2]);
+        printf("angle x: %f y: %f z: %f\n",
+            _angle[0], _angle[1], _angle[2]);
+        printf("angle speed x: %f y: %f z: %f\n",
+            _angle_speed[0], _angle_speed[1], _angle_speed[2]);
+            */
             pos[i] = _pos[i]; _pos[i] = 0;
             vel[i] = _vel[i]; _vel[i] = 0;
             angle[i] = _angle[i]; _angle[i] = 0;
@@ -70,9 +80,9 @@ void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
 
     for (int i = 0; i < 3; i++) {
         int16_t val = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
-
         accel[i] = (float) val;
         accel[i] = accel[i] / 16384.0;
+        
     }
 
     // Now gyro data from reg 0x43 for 6 bytes
@@ -85,6 +95,13 @@ void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
         int16_t val = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
         gyro[i] = (float) val;
         gyro[i] = gyro[i] / 65.5;
+       
+    }
+
+    for (int i = 0; i < 3; i++) {
+        printf("accel x: %.6f y: %.6f z: %.6f gyro x: %.6f y: %.6f z: %.6f\n",
+            accel[0], accel[1], accel[2],
+            gyro[0], gyro[1], gyro[2]);
     }
 
     // Now temperature from reg 0x41 for 2 bytes
@@ -118,19 +135,15 @@ void runIMURawTask( void *pvParameters )
     for( ;; )
     {
         mpu6050_read_raw(acceleration, gyro, &temp);
-        // TBD - wait mutex forever
         if (0 == last_read_tick) {
             // first call
             last_read_tick = xTaskGetTickCount();
         } else {
             if (xSemaphoreTake(imuMutex, portMAX_DELAY) == pdTRUE) {
                 sec_since_last_read = secondsSinceLastTick(last_read_tick);
-                for (int i = 0; i++; i < 3) {
+                for (int i = 0; i < 3; i++) {
                     _vel[i] = _vel[i] + sec_since_last_read * acceleration[i];
                     _pos[i] = _pos[i] + sec_since_last_read * _vel[i];
-                    printf("vel [%d]: %f, pos [%d]: %f\n",
-                        i, _vel[i], 
-                        i, _pos[i]);
                     // angle_speed[i] = angle_speed[i] + gyro[i];
                     // TBD - how to update angle speed and angle from gyro
                 }

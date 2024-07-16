@@ -101,3 +101,8 @@ struct SensorsData {
     float d_vy;
     float d_heading;
 };
+
+// ODOMETER
+// describes the count of holes in used for odometer disk
+#define ODOMETER_COUNT_OF_HOLES_IN_DISK     20
+#define WHEEL_DIAMETER_M                    0.064
