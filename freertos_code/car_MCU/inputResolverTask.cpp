@@ -49,7 +49,7 @@ void runInputResolverTask( void *pvParameters )
 
     bool _ext_control;
     struct EnginesPwr _engines_pwr;
-    TickType_t _lastRFDataTick;
+    TickType_t _lastRFDataTick = xTaskGetTickCount();
 
     PathPlanningData _path_planning_data;
     bool _pp_updated;

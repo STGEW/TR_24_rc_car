@@ -51,8 +51,7 @@ void runRfRxTask( void *pvParameters )
     /* Initialise xNextWakeTime - this only needs to be done once. */
     xNextWakeTime = xTaskGetTickCount();
 
-    for( ;; )
-    {
+    for( ;; ) {
         uint8_t pipe;
         if (radio.available()) {
             uint8_t bytes = radio.getPayloadSize(); // get the size of the payload

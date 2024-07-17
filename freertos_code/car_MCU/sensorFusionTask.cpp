@@ -20,34 +20,37 @@ static float _angle[3];
 static float _angle_speed[3];
 
 float _calc_odom_dist_m(uint32_t _odom_counter);
+void _reset_internal_state();
+
 
 void read_fused_sensors_data( SensorsData & sensors_data ) {
     // safely get the data
     if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
         sensors_data = _sensors_data;
-        _sensors_data.d_x = 0.0; _sensors_data.d_y = 0.0;
-        _sensors_data.d_vx = 0.0; _sensors_data.d_vy = 0.0;
-        _sensors_data.d_heading = 0.0;
+        _reset_internal_state()
         xSemaphoreGive(sensorFusionMutex);
     }
 }
 
 void reset_sensor_fusion_task() {
     if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
-        _sensors_data.d_x = 0.0;
-        _sensors_data.d_y = 0.0;
-        _sensors_data.d_vx = 0.0;
-        _sensors_data.d_vy = 0.0;
-        _sensors_data.d_heading = 0.0;
+        _reset_internal_state()
         xSemaphoreGive(sensorFusionMutex);
     }
 }
 
 void runSensorFusionTask(void *pvParameters) {
+
+    float left_wheel_dist_m = 0.0f;
+    float right_wheel_dist_m = 0.0f;
+
     for( ;; ) {
+
         read_odometer_data(_odometer_left_count, _odometer_right_count);
-        float left_odom_dist_m = _calc_odom_dist_m(_odometer_left_count);
-        float right_odom_dist_m = _calc_odom_dist_m(_odometer_right_count);
+
+        left_wheel_dist_m = _calc_odom_dist_m(_odometer_left_count);
+        right_wheel_dist_m = _calc_odom_dist_m(_odometer_right_count);
+
         // printf(
         //     "Odometer values are l: %d %.5f r: %d %.5f\n",
         //     _odometer_left_count, left_odom_dist_m,
@@ -64,9 +67,16 @@ void runSensorFusionTask(void *pvParameters) {
             _angle_speed[0], _angle_speed[1], _angle_speed[2]);
 */
         if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
+            // https://www.researchgate.net/publication/228845879_Basic_motion_model_of_autonomous_ground_vehicle
             // TBD - improve algorithm
+            // если обе стороны крутятся на d, то по y мы проедем d
+            // если одна на d, другая на -d, то мы вообще никуда не проедем
+            // если правая на d, другая на 0.
             _sensors_data.d_x += _pos[0];
             _sensors_data.d_y += _pos[1];
+            // that's initial way - use IMU for coordinates
+            // _sensors_data.d_x += _pos[0];
+            // _sensors_data.d_y += _pos[1];
             _sensors_data.d_vx += _vel[0];
             _sensors_data.d_vy += _vel[1];
             _sensors_data.d_heading = +_angle[0];
@@ -99,4 +109,10 @@ float _calc_odom_dist_m(uint32_t _odom_counter) {
     // with timings gives doubled value. I'll try to check it with oscilloscope
     return M_PI * WHEEL_DIAMETER_M * _odom_counter / (
         ODOMETER_COUNT_OF_HOLES_IN_DISK * 2.0);
+}
+
+void _reset_internal_state() {
+    _sensors_data.d_x = 0.0; _sensors_data.d_y = 0.0;
+    _sensors_data.d_vx = 0.0; _sensors_data.d_vy = 0.0;
+    _sensors_data.d_heading = 0.0;
 }
