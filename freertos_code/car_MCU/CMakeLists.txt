@@ -34,6 +34,7 @@ add_executable(main_car_mcu
         odometerTask.cpp
         controller.cpp
         pid_controller.cpp
+        mathematicalMotionModel.cpp
         ../utils.cpp
         RegTest.s
         /home/$ENV{USER}/build/FreeRTOS/FreeRTOS/Demo/Common/Minimal/blocktim.c

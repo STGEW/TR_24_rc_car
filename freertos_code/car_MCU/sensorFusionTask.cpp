@@ -27,14 +27,14 @@ void read_fused_sensors_data( SensorsData & sensors_data ) {
     // safely get the data
     if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
         sensors_data = _sensors_data;
-        _reset_internal_state()
+        _reset_internal_state();
         xSemaphoreGive(sensorFusionMutex);
     }
 }
 
 void reset_sensor_fusion_task() {
     if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
-        _reset_internal_state()
+        _reset_internal_state();
         xSemaphoreGive(sensorFusionMutex);
     }
 }

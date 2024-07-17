@@ -11,7 +11,7 @@ public:
     // wheels_radius - a radius of wheel in meters, f.e. 0.065 m
     // odometer_holes_count - total count of holes in a wheel, f.e. 20
     DifferentialModel(
-        float _wheel_base, float _wheels_radius, int odometer_holes_count);
+        float _wheels_base, float _wheels_radius, int _odometer_holes_count);
 
     // Calculate the state of vehicle
     // int delta_n_l - count of measured holes from the left odometer
@@ -64,7 +64,8 @@ private:
         float turn_radius);
 
     float phi_prev;
-    float wheel_base;
+    float phi;
+    float wheels_base;
     float wheels_radius;
     float odometer_holes_count;
 };
