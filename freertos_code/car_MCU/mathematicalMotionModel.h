@@ -1,6 +1,7 @@
 #pragma once
 
-// reference 
+// here is a theory about that
+// https://www.researchgate.net/publication/228845879_Basic_motion_model_of_autonomous_ground_vehicle
 struct VehicleState {
     float x;
     float y;

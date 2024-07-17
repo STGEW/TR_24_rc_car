@@ -21,30 +21,30 @@ DifferentialModel::DifferentialModel(float _wheels_base,
 // VehicleState - x,y,phi
 void DifferentialModel::update(int delta_n_l, int delta_n_r, VehicleState &state) {
 
-    printf(
-        "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
-        wheels_base, wheels_radius, odometer_holes_count);
+    // printf(
+    //     "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
+    //     wheels_base, wheels_radius, odometer_holes_count);
 
-    printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
+    // printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
     float delta_d_r = calc_delta_d(delta_n_r);
     float delta_d_l = calc_delta_d(delta_n_l);
 
-    printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
+    // printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
     float turn_radius = calc_turning_radius(
         delta_d_r, delta_d_l);
 
-    printf("turn_radius: %f\n", turn_radius);
+    // printf("turn_radius: %f\n", turn_radius);
     float delta_phi = calc_delta_phi(
         delta_d_r, delta_d_l, turn_radius);
 
-    printf("delta_phi: %f\n", delta_phi);
+    // printf("delta_phi: %f\n", delta_phi);
     phi_prev = phi;
     phi += delta_phi;
-    printf("phi: %f\n", phi);
+    // printf("phi: %f\n", phi);
     float x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
     float y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
 
-    printf("delta x: %f, delta y: %f\n", x, y);
+    // printf("delta x: %f, delta y: %f\n", x, y);
     state.x += x;
     state.y += y;
     state.phi = phi;

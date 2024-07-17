@@ -57,9 +57,9 @@ void runSensorFusionTask(void *pvParameters) {
         // left_wheel_dist_m = _calc_odom_dist_m(_odometer_left_count);
         // right_wheel_dist_m = _calc_odom_dist_m(_odometer_right_count);
         diff_model.update(_odometer_left_count, _odometer_right_count, state);
-        printf(
-            "State x: %f y: %f phi: %f\n",
-            state.x, state.y, state.phi);
+        // printf(
+        //     "State x: %f y: %f phi: %f\n",
+        //     state.x, state.y, state.phi);
 
         read_imu_data(_pos, _vel, _angle, _angle_speed);
 
@@ -72,7 +72,7 @@ void runSensorFusionTask(void *pvParameters) {
             _angle_speed[0], _angle_speed[1], _angle_speed[2]);
 */
         if (pdTRUE == xSemaphoreTake(sensorFusionMutex, portMAX_DELAY)) {
-            // https://www.researchgate.net/publication/228845879_Basic_motion_model_of_autonomous_ground_vehicle
+            
             // TBD - improve algorithm
             // если обе стороны крутятся на d, то по y мы проедем d
             // если одна на d, другая на -d, то мы вообще никуда не проедем

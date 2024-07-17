@@ -66,6 +66,7 @@ void runInputResolverTask( void *pvParameters )
             _ext_control = ext_control;
             _engines_pwr = rf_engines_pwr;
             _lastRFDataTick = lastRFDataTick;
+            
             xSemaphoreGive(inputResolverRfDataMutex);
         }
 
@@ -83,10 +84,12 @@ void runInputResolverTask( void *pvParameters )
             // stopping the car
             driver.direction_A = OFF;
             driver.direction_B = OFF;
+            runMotorDriver(driver);
         } else {
             gpio_put(RADIO_LED_PIN, 1);
             // fresh data from joystick
             if (_ext_control) {
+                printf("ext control TRUE branch\n");
                 if ( true == _pp_updated ) {
                     controller.start(_path_planning_data);
                     reset_sensor_fusion_task();
@@ -97,6 +100,7 @@ void runInputResolverTask( void *pvParameters )
                     runMotorDriver(driver);
                 }
             } else {
+                printf("ext control FALSE branch\n");
                 //somehow synchronize with driver task
                 dataEnginesToDriver(_engines_pwr, driver);
                 runMotorDriver(driver);
