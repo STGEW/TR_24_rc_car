@@ -1,3 +1,6 @@
+#pragma once
+
+// reference 
 struct VehicleState {
     float x;
     float y;
@@ -17,7 +20,7 @@ public:
     // int delta_n_l - count of measured holes from the left odometer
     // int delta_n_r - count of measured holes from the right odometer
     // return VehicleState - x,y,phi
-    VehicleState run(int delta_n_l, int delta_n_r);
+    void update(int delta_n_l, int delta_n_r, VehicleState &state);
     // reset internal information of the model
     void reset();
 
@@ -67,5 +70,5 @@ private:
     float phi;
     float wheels_base;
     float wheels_radius;
-    float odometer_holes_count;
+    int odometer_holes_count;
 };

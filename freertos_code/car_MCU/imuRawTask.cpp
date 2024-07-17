@@ -98,11 +98,11 @@ void mpu6050_read_raw(float accel[3], float gyro[3], float *temp) {
        
     }
 
-    for (int i = 0; i < 3; i++) {
-        printf("accel x: %.6f y: %.6f z: %.6f gyro x: %.6f y: %.6f z: %.6f\n",
-            accel[0], accel[1], accel[2],
-            gyro[0], gyro[1], gyro[2]);
-    }
+    // for (int i = 0; i < 3; i++) {
+    //     printf("accel x: %.6f y: %.6f z: %.6f gyro x: %.6f y: %.6f z: %.6f\n",
+    //         accel[0], accel[1], accel[2],
+    //         gyro[0], gyro[1], gyro[2]);
+    // }
 
     // Now temperature from reg 0x41 for 2 bytes
     // The register is auto incrementing on each read

@@ -21,10 +21,8 @@ TaskHandle_t xOdometerRightTaskHandle;
 
 void read_odometer_data(uint32_t & _odo_left_count, uint32_t & _odo_right_count) {
     if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
-        _odo_left_count += odometer_left_count;
-        odometer_left_count = 0;
-        _odo_right_count += odometer_right_count;
-        odometer_right_count = 0;
+        _odo_left_count = odometer_left_count; odometer_left_count = 0;
+        _odo_right_count = odometer_right_count; odometer_right_count = 0;
         xSemaphoreGive(odometerMutex);
     }
 }

@@ -4,6 +4,7 @@
 #include "sensorFusionTask.h"
 #include "odometerTask.h"
 #include "imuRawTask.h"
+#include "mathematicalMotionModel.h"
 
 
 SemaphoreHandle_t sensorFusionMutex;
@@ -18,6 +19,10 @@ static float _pos[3];
 static float _vel[3];
 static float _angle[3];
 static float _angle_speed[3];
+
+static DifferentialModel diff_model = DifferentialModel(
+    VEHICLE_BASE_SIZE_M, WHEEL_DIAMETER_M / 2.0f, ODOMETER_COUNT_OF_HOLES_IN_DISK
+);
 
 float _calc_odom_dist_m(uint32_t _odom_counter);
 void _reset_internal_state();
@@ -41,20 +46,20 @@ void reset_sensor_fusion_task() {
 
 void runSensorFusionTask(void *pvParameters) {
 
-    float left_wheel_dist_m = 0.0f;
-    float right_wheel_dist_m = 0.0f;
+    // float left_wheel_dist_m = 0.0f;
+    // float right_wheel_dist_m = 0.0f;
+    VehicleState state;
 
     for( ;; ) {
 
         read_odometer_data(_odometer_left_count, _odometer_right_count);
 
-        left_wheel_dist_m = _calc_odom_dist_m(_odometer_left_count);
-        right_wheel_dist_m = _calc_odom_dist_m(_odometer_right_count);
-
-        // printf(
-        //     "Odometer values are l: %d %.5f r: %d %.5f\n",
-        //     _odometer_left_count, left_odom_dist_m,
-        //     _odometer_right_count, right_odom_dist_m);
+        // left_wheel_dist_m = _calc_odom_dist_m(_odometer_left_count);
+        // right_wheel_dist_m = _calc_odom_dist_m(_odometer_right_count);
+        diff_model.update(_odometer_left_count, _odometer_right_count, state);
+        printf(
+            "State x: %f y: %f phi: %f\n",
+            state.x, state.y, state.phi);
 
         read_imu_data(_pos, _vel, _angle, _angle_speed);
 
@@ -93,6 +98,7 @@ void runSensorFusionTask(void *pvParameters) {
 }
 
 
+// Temporary is not used
 // This method calculates from count of recorded rotations a distance
 float _calc_odom_dist_m(uint32_t _odom_counter) {
     // multiplier 2 doesn't have mathematical meaning

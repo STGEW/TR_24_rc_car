@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 #include "mathematicalMotionModel.h"
 
@@ -10,34 +11,43 @@ DifferentialModel::DifferentialModel(float _wheels_base,
         float _wheels_radius, int _odometer_holes_count) {
     wheels_base = _wheels_base;
     wheels_radius = _wheels_radius;
-    odometer_holes_count = odometer_holes_count;
-};
+    odometer_holes_count = _odometer_holes_count;
+}
 
 
 // Calculate the state of vehicle
 // int delta_n_l - count of measured holes from the left odometer
 // int delta_n_r - count of measured holes from the right odometer
-// return VehicleState - x,y,phi
-VehicleState DifferentialModel::run(int delta_n_l, int delta_n_r) {
+// VehicleState - x,y,phi
+void DifferentialModel::update(int delta_n_l, int delta_n_r, VehicleState &state) {
 
+    printf(
+        "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
+        wheels_base, wheels_radius, odometer_holes_count);
+
+    printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
     float delta_d_r = calc_delta_d(delta_n_r);
     float delta_d_l = calc_delta_d(delta_n_l);
 
+    printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
     float turn_radius = calc_turning_radius(
         delta_d_r, delta_d_l);
 
+    printf("turn_radius: %f\n", turn_radius);
     float delta_phi = calc_delta_phi(
         delta_d_r, delta_d_l, turn_radius);
 
+    printf("delta_phi: %f\n", delta_phi);
     phi_prev = phi;
     phi += delta_phi;
-
+    printf("phi: %f\n", phi);
     float x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
     float y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
 
-    VehicleState state = {x, y, phi};
-
-    return state;
+    printf("delta x: %f, delta y: %f\n", x, y);
+    state.x += x;
+    state.y += y;
+    state.phi = phi;
 }
 
 
@@ -45,7 +55,7 @@ VehicleState DifferentialModel::run(int delta_n_l, int delta_n_r) {
 void DifferentialModel::reset() {
     phi_prev = 0.0f;
     phi = 0.0f;
-};
+}
 
 
 // delta_n - count of holes measured by odometer
