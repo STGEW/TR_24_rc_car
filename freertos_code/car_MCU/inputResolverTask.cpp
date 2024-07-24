@@ -54,6 +54,8 @@ void runInputResolverTask( void *pvParameters )
     PathPlanningData _path_planning_data;
     bool _pp_updated;
 
+    float secSinceLastRFData;
+
     DriverControlData driver;
     SensorsData sensors_data;
 
@@ -63,49 +65,50 @@ void runInputResolverTask( void *pvParameters )
     {
         // non blocking!
         if (xSemaphoreTake(inputResolverRfDataMutex, 0) == pdTRUE) {
+            // copying the state of global variables to local variables
             _ext_control = ext_control;
             _engines_pwr = rf_engines_pwr;
             _lastRFDataTick = lastRFDataTick;
-            
             xSemaphoreGive(inputResolverRfDataMutex);
         }
 
         // non blocking!
         if (xSemaphoreTake(inputResolverPathPlanningMutex, 0) == pdTRUE) {
+            // copying the state of global variables to local variables
             _pp_updated = pp_updated;
             _path_planning_data = inp_res_pp_data;
             xSemaphoreGive(inputResolverPathPlanningMutex);
         }
 
-        float sec = secondsSinceLastTick(_lastRFDataTick);
-        if (sec > JOYSTICK_TIMEOUT_SEC) {
+        secSinceLastRFData = secondsSinceLastTick(_lastRFDataTick);
+        
+        if (secSinceLastRFData > JOYSTICK_TIMEOUT_SEC) {
             // no data from joystick since reasonable amount of time
-            gpio_put(RADIO_LED_PIN, 0);
+            gpio_put(RADIO_LED_PIN, 0); // LED indication
             // stopping the car
-            driver.direction_A = OFF;
-            driver.direction_B = OFF;
-            runMotorDriver(driver);
+            driver.direction_A = OFF; driver.direction_B = OFF;
         } else {
-            gpio_put(RADIO_LED_PIN, 1);
             // fresh data from joystick
+            gpio_put(RADIO_LED_PIN, 1); // LED indication
             if (_ext_control) {
                 printf("ext control TRUE branch\n");
                 if ( true == _pp_updated ) {
+                    // ?
                     controller.start(_path_planning_data);
                     reset_sensor_fusion_task();
                 } else {
                     read_fused_sensors_data(sensors_data);
+                    // ?
                     controller.update(_engines_pwr, sensors_data);
                     dataEnginesToDriver(_engines_pwr, driver);
-                    runMotorDriver(driver);
                 }
             } else {
                 printf("ext control FALSE branch\n");
                 //somehow synchronize with driver task
                 dataEnginesToDriver(_engines_pwr, driver);
-                runMotorDriver(driver);
             }
         }
+        runMotorDriver(driver);
 
         // 50 msec delay ~ 20 Hz
         vTaskDelay(pdMS_TO_TICKS( 50 ));

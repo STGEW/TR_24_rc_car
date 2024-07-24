@@ -1,0 +1,83 @@
+тривиальный подход:
+1) поворот на месте
+2) движение по прямой
+
+dist = math.sqrt ((x2 - x1) ** 2) + (y2 - y1)**2))
+dist = delta_n /
+
+нужно решить обратную задачу 
+def calc_delta_d(delta_n):
+    # delta_n (int) - a value which represents a turn of wheel
+    # return
+    # delta_d (float) - the length of the path in meters
+    delta_n = float(delta_n)
+    return delta_n * 2 * pi * wheels_radius_m * gear_ratio / max_n
+
+// движение по прямой
+def calc_delta_n_for_dist(delta_d):
+    // 2 * pi * R ~ nax_n
+    // delta_d - n
+    n = (delta_d * max_n) / (2 * pi * R) 
+    return n
+
+// поворот на месте
+Есть база - по сути это диаметр
+
+2 * pi * R ~ 2 * pi
+x - phi
+
+def calc_delta_n_for_phi(phi):
+    // мы ожидаем этот угол в радианах
+    // на выходе delta_n - применять положительным
+    // образом для поворота влево и отрицательным - вправо
+    delta_n = (phi * 2 * pi * R) / (2 * pi)
+    return delta_n
+
+откуда возьмется угол phi?
+у нас на входе хотелка - x1, y1.
+Нам известен угол phi0. По сути у нас x0, y0
+
+delta_x = x1 - x0
+delta_y = y1 - y0
+
+считаем что это ось y
+|
+|
+|
+|
+|________________- а это ось x
+
+нам известен угол phi0, phi1.
+phi1 = arctag(y / x)
+delta_phi = phi1-phi0
+Шаг 1 - развернуться на месте
+Шаг 2 - ехать прямо
+
+Интерфейс:
+Controller
+run()
+
+вход - список координат желаемых
+x0, y0
+x1, y1,
+x2, y2
+
+выход - будет больше, насколько - неизвестно
+
+
+path = [
+    [1.1, 2.2],
+    [5, 2.2],
+    [10, 2.2],
+    [10, 10],
+    [5, 10],
+    [5, 5],
+    [4, 4],
+    [3, 3],
+    [1.2, 1.2],
+    [3.5, 3.5],
+    [5.5, 5.5]
+]
+
+
+
