@@ -15,7 +15,7 @@ def calc_delta_d(delta_n):
 
 // движение по прямой
 def calc_delta_n_for_dist(delta_d):
-    // 2 * pi * R ~ nax_n
+    // 2 * pi * R ~ max_n
     // delta_d - n
     n = (delta_d * max_n) / (2 * pi * R) 
     return n
