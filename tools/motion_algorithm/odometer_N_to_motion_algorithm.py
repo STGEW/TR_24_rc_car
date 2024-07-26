@@ -6,6 +6,11 @@ import logging
 
 from utils import get_wheels_base, get_wheel_radius, get_max_n
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]
+)
 
 # example of data generated for this file
 # epochs = 100
@@ -53,9 +58,19 @@ class OdometerToMotion:
 
         logger.info(f'phi: {self._phi} delta phi: {delta_phi}')
 
+        x = self._calc_x(
+            delta_d_r,
+            delta_d_l,
+            self._phi_prev,
+            self._phi,
+            turn_radius)
 
-        x = self._calc_x(delta_d_r, delta_d_l, self._phi_prev, phi, turn_radius)
-        y = self._calc_y(delta_d_r, delta_d_l, self._phi_prev, phi, turn_radius)
+        y = self._calc_y(
+            delta_d_r,
+            delta_d_l,
+            self._phi_prev,
+            self._phi,
+            turn_radius)
 
         return x, y, self._phi
         
@@ -76,6 +91,8 @@ class OdometerToMotion:
         # wheels_base (float) - a distance between wheels in m on vehicle
         # return:
         # turning radius (float) - meters
+        if delta_d_l == delta_d_r:
+            return float('inf')
         return delta_d_r * self._wheels_base / (delta_d_l - delta_d_r)
 
     # calc a change in a direction angle
@@ -124,26 +141,26 @@ class OdometerToMotion:
                 cos(phi_prev + pi / 2.0) + cos(phi - pi / 2.0))
 
 
-
-with open(file_path, 'w') as f:
-    json.dump(
-        {
-            'x': x_arr,
-            'y': y_arr,
-            'phi': phi_arr,
-            'w': w,
-        }, f, indent=4)
-
-
 def main():
     logger.info('Parsing arguments')
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'config', type=Path, help='Path to configuration file')
+        '--config',
+        required=True,
+        type=Path,
+        help='Path to configuration file')
     parser.add_argument(
-        'odometer_file', type=Path, help='Path to file with coordinates')
+        '--odometer_file',
+        required=True,
+        type=Path,
+        help="Path to file with odometer values. "
+        "Example of the format: {'n_left': [], 'n_right': []}")
     parser.add_argument(
-        'res_file', type=Path, help='Path to the result file with coordinates') 
+        '--res_file',
+        required=True,
+        type=Path,
+        help='Path to the result file with coordinates'
+        "Example of format: {'x': [], 'y': [], 'phi': []}")
     args = parser.parse_args()
     logger.info(f'Arguments are: {args}')
     odometer_file_path = args.odometer_file
@@ -172,13 +189,18 @@ def main():
     y_arr = []
     phi_arr = []
     phi = 0.0
+    x = 0.0
+    y = 0.0
 
     for i in range(len(n_left)):
         logger.info(f"Iteration i: {i}")
         n_r = n_right[i]
         n_l = n_left[i]
         
-        x, y, phi = odo_to_motion(n_r, n_l)
+        delta_x, delta_y, phi = odo_to_motion(n_r, n_l)
+
+        x += delta_x
+        y += delta_y
 
         x_arr.append(x)
         y_arr.append(y)

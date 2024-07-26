@@ -13,3 +13,16 @@ auto_motion_algorithm.ipynb - an algorithm that will calculate the distances and
 
 auto_motion_plotter.py - a plotter, it will read json file and plot it with matplotlib
  
+
+pip install pyyaml
+pip install matplotlib
+
+
+Running motion to odometer part:
+python ./motion_to_odometer_algorithm.py --config config.yml --motion_file path_2.json --res_file ~/projects/tmp/odometer.json
+
+Running odometer to motion part:
+python ./odometer_N_to_motion_algorithm.py --config config.yml --odometer_file ~/projects/tmp/odometer.json --res_file ~/projects/tmp/motion.json
+
+To plot and compare both results visually:
+python ./plot_pathes.py --path1 path_2.json --path2 ~/projects/tmp/motion.json
