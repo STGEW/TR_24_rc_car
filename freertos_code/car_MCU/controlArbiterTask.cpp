@@ -1,7 +1,7 @@
 #include "hardware/gpio.h"
 #include <stdio.h>
 
-#include "inputResolverTask.h"
+#include "controlArbiterTask.h"
 #include "sensorFusionTask.h"
 #include "motorDriver.h"
 #include "controller.h"
@@ -23,7 +23,7 @@ void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
 
 
 // initialize required for motor pins
-void setupInputResolverTask( void )
+void setupControlArbiterTask( void )
 {
     // intially OFF
     gpio_init(RADIO_LED_PIN);
@@ -32,7 +32,7 @@ void setupInputResolverTask( void )
 }
 
 
-void runInputResolverTask( void *pvParameters )
+void runControlArbiterTask( void *pvParameters )
 {
     TickType_t xNextWakeTime;
     const unsigned long ulValueToSend = 100UL;
@@ -72,6 +72,7 @@ void runInputResolverTask( void *pvParameters )
             xSemaphoreGive(inputResolverRfDataMutex);
         }
 
+        // Do we need it????
         // non blocking!
         if (xSemaphoreTake(inputResolverPathPlanningMutex, 0) == pdTRUE) {
             // copying the state of global variables to local variables
@@ -110,8 +111,8 @@ void runInputResolverTask( void *pvParameters )
         }
         runMotorDriver(driver);
 
-        // 50 msec delay ~ 20 Hz
-        vTaskDelay(pdMS_TO_TICKS( 50 ));
+        // 10 msec delay ~ 100 Hz
+        vTaskDelay(pdMS_TO_TICKS( 10 ));
     }
 }
 

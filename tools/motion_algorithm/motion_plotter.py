@@ -1,3 +1,4 @@
+# used to plot a motion in a fancy way with a matplotlib
 import json
 import numpy as np
 import matplotlib.pyplot as plt

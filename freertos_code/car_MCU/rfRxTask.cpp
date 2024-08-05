@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <RF24.h>
-#include "inputResolverTask.h"
+#include "controlArbiterTask.h"
 #include "../const.h"
 
 

@@ -2,8 +2,7 @@ from pathlib import Path
 import yaml
 
 
-def get_config(path):
-    conf_path = Path('config.yml')
+def get_config(conf_path):
     with open(conf_path, 'r') as file:
         conf = yaml.safe_load(file)
         return conf

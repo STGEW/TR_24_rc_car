@@ -1,11 +1,5 @@
 from math import atan2, sqrt, pi
 import logging
-import argparse
-from pathlib import Path
-import json
-
-
-from utils import get_wheels_base, get_wheel_radius, get_max_n
 
 
 logging.basicConfig(
@@ -27,7 +21,7 @@ class MotionToOdometer:
             f'max N: "{self._max_n}" '
             f'wheels base: "{self._wheels_base}"')
 
-    def __call__(self, x1, y1, phi1, x2, y2,):
+    def __call__(self, x1, y1, phi1, x2, y2):
         # x1, y1 - coordinates of the initial point
         # phi1 - angle of the initial point
         # x2, y2 - coordinated of the next point
@@ -48,13 +42,13 @@ class MotionToOdometer:
 
 
     # Motion along the line
-    def _calc_delta_n_for_dist(self, delta_d):
-        # R - wheel radius
-        # max_n - count of holes in odometer
-        # 2 * pi * R ~ max_n
-        # delta_d - n
-        n = (delta_d * self._max_n) / (2 * pi * self._wheel_radius) 
-        return n
+    # def _calc_delta_n_for_dist(self, delta_d):
+    #     # R - wheel radius
+    #     # max_n - count of holes in odometer
+    #     # 2 * pi * R ~ max_n
+    #     # delta_d - n
+    #     n = (delta_d * self._max_n) / (2 * pi * self._wheel_radius) 
+    #     return n
 
     # a question - how many n's should be to rotate on the angle phi?
     # input: phi
@@ -102,95 +96,3 @@ class MotionToOdometer:
         # but it's obvious that the only difference is opposite sign
         n_r = - n_l
         return n_l, n_r
-
-
-def main():
-    logger.info('Parsing arguments')
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--config', 
-        required=True,
-        type=Path,
-        help='Path to configuration file')
-    parser.add_argument(
-        '--motion_file',
-        required=True,
-        type=Path,
-        help="Path to file with path values. "
-        "Example of the format: {'x': [], 'y': []}")
-    parser.add_argument(
-        '--res_file',
-        required=True,
-        type=Path,
-        help='Path to the result file with odometer values '
-        "Example of the format: {'n_left': [], 'n_right': []}")
-    args = parser.parse_args()
-    logger.info(f'Arguments are: {args}')
-    motion_file_path = args.motion_file
-    res_file_path = args.res_file
-
-    wheels_base = get_wheels_base(args.config)
-    wheel_radius = get_wheel_radius(args.config)
-    max_n = get_max_n(args.config)
-    logger.info(
-        f'Wheels base: {wheels_base} '
-        f'wheel radius: {wheel_radius} '
-        f'max N: {max_n}')
-
-    motion_to_odo = MotionToOdometer(wheel_radius, max_n, wheels_base)
-
-    with open(motion_file_path, 'r') as f:
-        data = json.load(f)
-    
-    logger.info(f"Motion file values: {data}")
-    x_arr = data['x']
-    y_arr = data['y']
-
-    assert len(x_arr) == len(y_arr), 'ERROR! Sizes should match each other'
-
-    n_left = []
-    n_right = []
-    phi_arr = []
-    phi = 0.0
-
-    x1, y1, phi1 = None, None, pi / 2.0
-    n_left = []
-    n_right = []
-    for i in range(len(x_arr)):
-        x2 = x_arr[i]
-        y2 = y_arr[i]
-        if x1 is None and y1 is None:
-            x1, y1 = x2, y2
-            continue
-        logger.info(
-            f'x1: {x1:.2f}, y1: {y1:.2f}, '
-            f'x2: {x2:.2f}, y2: {y2:.2f}, '
-            f'phi1: {phi1:.3f}')
-        angle_n_l, angle_n_r, dist_n, phi2 = motion_to_odo(
-            x1, y1,
-            phi1,
-            x2, y2)
-        logger.info(
-            f'Angle n left: {angle_n_l:.2f}, '
-            f'right: {angle_n_r:.2f}, '
-            f'dist n: {dist_n:.2f}, '
-            f'phi2: {phi2:.2f}')
-
-        n_left.append(angle_n_l)
-        n_right.append(angle_n_r)
-
-        n_left.append(dist_n)
-        n_right.append(dist_n)
-
-        x1, y1, phi1 = x2, y2, phi2
-
-    logger.info(f"Saving a result to file")
-    with open(res_file_path, 'w') as f:
-        json.dump(
-            {
-                'n_left': n_left,
-                'n_right': n_right,
-            }, f, indent=4)
-
-if __name__ == "__main__":
-    main()

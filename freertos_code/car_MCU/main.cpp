@@ -9,7 +9,7 @@
 #include "IntSemTest.h"
 #include "TaskNotify.h"
 
-#include "inputResolverTask.h"
+#include "controlArbiterTask.h"
 #include "cameraServoTask.h"
 #include "hardware/gpio.h"
 #include "sensorFusionTask.h"
@@ -36,9 +36,9 @@ extern void runRfRxTask( void *pvParameters );
 // motorDriverTask functions
 extern void setupMotorDriver( void );
 
-// inputResolverTask functions
-extern void setupInputResolverTask( void );
-extern void runInputResolverTask( void *pvParameters );
+// controlArbiterTask functions
+extern void setupControlArbiterTask( void );
+extern void runControlArbiterTask( void *pvParameters );
 
 // imuRawTask functions
 extern void setupIMURawTask();
@@ -91,7 +91,7 @@ void core_1_tasks( void )
         return;
     }
 
-    xTaskCreate( runInputResolverTask, "runInputResolverTask",
+    xTaskCreate( runControlArbiterTask, "runControlArbiterTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
     xTaskCreate( runRfRxTask, "rfRxTask",                     
@@ -140,7 +140,7 @@ static void prvSetupHardware( void )
     setupMotorDriver();
     setupRfRxTask();
     setupIMURawTask();
-    setupInputResolverTask();
+    setupControlArbiterTask();
     setupUartHandlerHardware();
     setupCameraServoTask();
     setupOdometerTask();

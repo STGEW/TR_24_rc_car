@@ -4,7 +4,7 @@
 #include "sensorFusionTask.h"
 #include "odometerTask.h"
 #include "imuRawTask.h"
-#include "mathematicalMotionModel.h"
+#include "differentialVehicleModel.h"
 
 
 SemaphoreHandle_t sensorFusionMutex;
@@ -20,7 +20,7 @@ static float _vel[3];
 static float _angle[3];
 static float _angle_speed[3];
 
-static DifferentialModel diff_model = DifferentialModel(
+static DifferentialVehicleModel diff_model = DifferentialVehicleModel(
     VEHICLE_BASE_SIZE_M, WHEEL_DIAMETER_M / 2.0f, ODOMETER_COUNT_OF_HOLES_IN_DISK
 );
 
@@ -48,7 +48,7 @@ void runSensorFusionTask(void *pvParameters) {
 
     // float left_wheel_dist_m = 0.0f;
     // float right_wheel_dist_m = 0.0f;
-    VehicleState state;
+    Vehicle2DPosition vehicle_2D_pos;
 
     for( ;; ) {
 
@@ -56,10 +56,11 @@ void runSensorFusionTask(void *pvParameters) {
 
         // left_wheel_dist_m = _calc_odom_dist_m(_odometer_left_count);
         // right_wheel_dist_m = _calc_odom_dist_m(_odometer_right_count);
-        diff_model.update(_odometer_left_count, _odometer_right_count, state);
+        diff_model.odometer_to_position_diff(
+            _odometer_left_count, _odometer_right_count, vehicle_2D_pos);
         // printf(
-        //     "State x: %f y: %f phi: %f\n",
-        //     state.x, state.y, state.phi);
+        //     "vehicle_2D_pos x: %f y: %f phi: %f\n",
+        //     vehicle_2D_pos.x, vehicle_2D_pos.y, vehicle_2D_pos.phi);
 
         read_imu_data(_pos, _vel, _angle, _angle_speed);
 

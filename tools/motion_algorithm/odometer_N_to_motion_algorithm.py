@@ -1,10 +1,6 @@
-from pathlib import Path
 from math import pi, sin, cos
-import json
-import argparse
 import logging
 
-from utils import get_wheels_base, get_wheel_radius, get_max_n
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -106,7 +102,7 @@ class OdometerToMotion:
             return 0.0
         # delta_d_l != delta_d_r
         if turn_radius == 0.0:
-            return delta_d_l / w
+            return delta_d_l / self._wheels_base
         else:
             # turn_radius != 0.0
             return delta_d_r / turn_radius
@@ -139,82 +135,3 @@ class OdometerToMotion:
             return cos(phi) * (delta_d_r + delta_d_l) / 2.0
         return (turn_radius + self._wheels_base / 2.0) * (
                 cos(phi_prev + pi / 2.0) + cos(phi - pi / 2.0))
-
-
-def main():
-    logger.info('Parsing arguments')
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--config',
-        required=True,
-        type=Path,
-        help='Path to configuration file')
-    parser.add_argument(
-        '--odometer_file',
-        required=True,
-        type=Path,
-        help="Path to file with odometer values. "
-        "Example of the format: {'n_left': [], 'n_right': []}")
-    parser.add_argument(
-        '--res_file',
-        required=True,
-        type=Path,
-        help='Path to the result file with coordinates'
-        "Example of format: {'x': [], 'y': [], 'phi': []}")
-    args = parser.parse_args()
-    logger.info(f'Arguments are: {args}')
-    odometer_file_path = args.odometer_file
-    res_file_path = args.res_file
-
-    wheels_base = get_wheels_base(args.config)
-    wheel_radius = get_wheel_radius(args.config)
-    max_n = get_max_n(args.config)
-    logger.info(
-        f'Wheels base: {wheels_base} '
-        f'wheel radius: {wheel_radius} '
-        f'max N: {max_n}')
-
-    odo_to_motion = OdometerToMotion(wheel_radius, max_n, wheels_base)
-
-    with open(odometer_file_path, 'r') as f:
-        data = json.load(f)
-    
-    logger.info(f"Odometer file values: {data}")
-    n_left = data['n_left']
-    n_right = data['n_right']
-
-    assert len(n_left) == len(n_right), 'ERROR! Sizes should match each other'
-
-    x_arr = []
-    y_arr = []
-    phi_arr = []
-    phi = 0.0
-    x = 0.0
-    y = 0.0
-
-    for i in range(len(n_left)):
-        logger.info(f"Iteration i: {i}")
-        n_r = n_right[i]
-        n_l = n_left[i]
-        
-        delta_x, delta_y, phi = odo_to_motion(n_r, n_l)
-
-        x += delta_x
-        y += delta_y
-
-        x_arr.append(x)
-        y_arr.append(y)
-        phi_arr.append(phi)
-
-    logger.info(f"Saving a result to file")
-    with open(res_file_path, 'w') as f:
-        json.dump(
-            {
-                'x': x_arr,
-                'y': y_arr,
-                'phi': phi_arr,
-            }, f, indent=4)
-
-
-if __name__ == "__main__":
-    main()
