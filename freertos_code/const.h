@@ -84,15 +84,6 @@ struct DriverControlData {
     int duty_cycle_B;
 };
 
-// Path planning task in m
-const char UART_PP_DATA_HEADER[] = {'B', 'B'};
-struct __attribute__((__packed__)) PathPlanningData {
-    float x;
-    float y;
-    float v_x;
-    float v_y;
-};
-
 // everything in meters + radians
 struct SensorsData {
     float d_x;

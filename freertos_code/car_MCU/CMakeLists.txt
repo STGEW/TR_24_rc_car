@@ -30,7 +30,7 @@ add_executable(main_car_mcu
         sensorFusionTask.cpp
         rfRxTask.cpp
         IntQueueTimer.c
-        dataParser.cpp
+        commandsParser.cpp
         odometerTask.cpp
         controller.cpp
         pid_controller.cpp

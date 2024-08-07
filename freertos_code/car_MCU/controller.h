@@ -11,6 +11,15 @@
 #define X_AXIS_IDX 0
 #define Y_AXIS_IDX 1
 
+// this should be removed. I've just put it here to fix compilation problem
+// the class should be heavily reworked
+struct __attribute__((__packed__)) PathPlanningData {
+    float x;
+    float y;
+    float v_x;
+    float v_y;
+};
+
 
 class Controller {
 
