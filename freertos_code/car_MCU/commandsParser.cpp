@@ -25,7 +25,7 @@ void CommandsParser::parse(const char symbol) {
     printf(
         "parse get new symbol: %c\n", symbol);
     
-    switch (state )
+    switch (state)
     {
         case HEADER:
             printf("case HEADER\n");
@@ -38,10 +38,11 @@ void CommandsParser::parse(const char symbol) {
             }
 
             if (SIZE == state) {
+                // Is that a problem???
                 header_buff[0] = '0'; header_buff[1] = '0';
                 printf("Moving to SIZE state:\n");
             }
-
+            printf(" One more time Moving to SIZE state:\n");
             break;
         case SIZE:
             printf("case SIZE\n");
@@ -56,8 +57,6 @@ void CommandsParser::parse(const char symbol) {
             counter++;
             if (counter == exp_size) {
                 memcpy(&point_2D, body_buff, exp_size);
-                printf("We collected all symbols. Message: %f %f\n",
-                    point_2D.x, point_2D.y);
                 state = HEADER;
                 counter = 0;
                 true == is_cmd ? stop_cb_ptr() : new_path_cb_ptr(&point_2D);
@@ -66,6 +65,7 @@ void CommandsParser::parse(const char symbol) {
         default:
             break;
     }
+    printf("Leaving CommandsParsers' parse function\n");
 }
 
 int CommandsParser::compareCharArrays(const char arr1[2], const char arr2[2]) {

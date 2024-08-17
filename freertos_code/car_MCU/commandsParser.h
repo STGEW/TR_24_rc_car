@@ -1,8 +1,11 @@
 #pragma once
 
+// TBD - add a checksum in the end
+
 #include <cstdint> // ??? Do I need it?
 #include <cstddef> 
 #include <assert.h>
+#include "../const.h"
 
 // commands
 const char CMDS_HEADER[] = {'T', 'R'};
@@ -10,10 +13,6 @@ const char PP_HEADER[] = {'L', 'F'};
 
 static_assert(sizeof(CMDS_HEADER) == sizeof(PP_HEADER), "Size of CMDS_HEADER and PP_HEADER must be equal");
 
-struct __attribute__((__packed__)) Point2D {
-    float x;
-    float y;
-};
 
 #define SIZE_VAR_SIZE       1
 #define MAX_BODY_SIZE       256

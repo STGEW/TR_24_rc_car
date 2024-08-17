@@ -12,7 +12,6 @@
 #include "controlArbiterTask.h"
 #include "cameraServoTask.h"
 #include "hardware/gpio.h"
-#include "sensorFusionTask.h"
 #include "odometerTask.h"
 #include "uartHandlerTask.h"
 #include "imuRawTask.h"
@@ -28,11 +27,6 @@
 #endif
 
 /*-----------------------------------------------------------*/
-
-// rfRXTask - responsible for receiving data from radio
-extern void setupRfRxTask( void );
-extern void runRfRxTask( void *pvParameters );
-
 // motorDriverTask functions
 extern void setupMotorDriver( void );
 
@@ -59,9 +53,6 @@ extern void setupOdometerTask();
 extern void runOdometerLeftTask(void *pvParameters );
 extern void runOdometerRightTask(void *pvParameters );
 
-//sensorFusionTask
-extern void runSensorFusionTask(void *pvParameters );
-
 static void prvSetupHardware( void );
 
 /* Prototypes for the standard FreeRTOS callback/hook functions implemented
@@ -76,32 +67,33 @@ void core_1_tasks( void )
 {
 
     cameraServoSemaphore = xSemaphoreCreateBinary();
-
-    inputResolverRfDataMutex = xSemaphoreCreateMutex();
-    inputResolverPathPlanningMutex = xSemaphoreCreateMutex();
-    sensorFusionMutex = xSemaphoreCreateMutex();
     odometerMutex = xSemaphoreCreateMutex();
-    uartMutex = xSemaphoreCreateMutex();
     imuMutex = xSemaphoreCreateMutex();
+    uartStopCMDMutex = xSemaphoreCreateMutex();
 
-    // Create the queue
-    uartTxQueue = xQueueCreate(10, sizeof(char*));
-    if (uartTxQueue == NULL) {
-        printf("ERROR! uartTxQueue can't be created\n");
+    // Working with UART queues
+    // To send something to UART
+    queue_uart_tx = xQueueCreate(10, sizeof(char*));
+    if (NULL == queue_uart_tx) {
+        printf("ERROR! queue_uart_tx can't be created\n");
+        return;
+    }
+
+    // To read points from UART
+    queue_points_2D = xQueueCreate(10, sizeof(Point2D));
+    if (NULL == queue_points_2D) {
+        printf("ERROR! queue_points_2D can't be created\n");
         return;
     }
 
     xTaskCreate( runControlArbiterTask, "runControlArbiterTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
-    xTaskCreate( runRfRxTask, "rfRxTask",                     
-        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
-
     xTaskCreate( runIMURawTask, "imuRawTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
-    xTaskCreate( runCameraServoTask, "cameraServoTask",                     
-        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
+    // xTaskCreate( runCameraServoTask, "cameraServoTask",                     
+    //     configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
 
     xTaskCreate( runUartHandlerTask, "runUartHandlerTask",                     
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );
@@ -113,9 +105,6 @@ void core_1_tasks( void )
     xTaskCreate(runOdometerRightTask, "runOdometerRightTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,
         &xOdometerRightTaskHandle);
-
-    xTaskCreate(runSensorFusionTask, "runSensorFusionTask",
-        configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
     vTaskStartScheduler();
 
@@ -138,7 +127,6 @@ static void prvSetupHardware( void )
 {
     stdio_init_all();
     setupMotorDriver();
-    setupRfRxTask();
     setupIMURawTask();
     setupControlArbiterTask();
     setupUartHandlerHardware();

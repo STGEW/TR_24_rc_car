@@ -6,12 +6,71 @@
 
 #include "uartHandlerTask.h"
 
+QueueHandle_t queue_uart_tx;
+QueueHandle_t queue_points_2D;
+SemaphoreHandle_t uartStopCMDMutex;
 
-SemaphoreHandle_t uartMutex;
-QueueHandle_t uartTxQueue;
+static const char * resp_ok = "ok";
+static const char * resp_done = "done";
+static const char * resp_abort = "abort";
 
-uint8_t uart_buffer[UART_CTRL_BUFF_SIZE];
-int uart_buffer_counter = 0;
+bool stop_cmd_flag = false;
+
+void send_done() {
+    if (xQueueSend(queue_uart_tx, &resp_done, portMAX_DELAY) != pdPASS) {
+        printf("Error! Can't send 'done' to UART queue\n");
+    }
+}
+
+void send_abort() {
+    if (xQueueSend(queue_uart_tx, &resp_abort, portMAX_DELAY) != pdPASS) {
+        printf("Error! Can't send 'abort' to UART queue\n");
+    }
+}
+
+void send_ok() {
+    if (xQueueSend(queue_uart_tx, &resp_ok, portMAX_DELAY) != pdPASS) {
+        printf("Error! Can't send 'ok' to UART queue\n");
+    }
+}
+
+bool check_new_point_parsed(Point2D &point_2D) {
+    if (xQueueReceive(queue_points_2D, &point_2D, 0) == pdPASS) {
+        printf(
+            "Reading new point x: %f y: %f from queue\n",
+            point_2D.x, point_2D.y);
+        return true;
+    }
+    return false;
+}
+
+bool stop_cmd_received() {
+    bool flag = false;
+    if (xSemaphoreTake(uartStopCMDMutex, portMAX_DELAY) == pdTRUE) {
+        flag = stop_cmd_flag; stop_cmd_flag = false;
+        xSemaphoreGive(uartStopCMDMutex);
+    }
+    return flag;
+}
+
+void new_point_cb(Point2D * p) {
+    printf("New point cb called with values: x: %f y: %f\n", p->x, p->y);
+    if (xQueueSend(queue_points_2D, p, portMAX_DELAY) != pdPASS) {
+        printf(
+            "Error! Can't send new point x: %f y: %f to queue\n",
+            p->x, p->y);
+        send_ok();
+    }
+}
+
+void stop_cb() {
+    if (xSemaphoreTake(uartStopCMDMutex, portMAX_DELAY) == pdTRUE) {
+        printf("Stop callback called\n");
+        stop_cmd_flag = true;
+        xSemaphoreGive(uartStopCMDMutex);
+        send_ok();
+    }
+}
 
 void setupUartHandlerHardware()
 {
@@ -21,38 +80,27 @@ void setupUartHandlerHardware()
 }
 
 void runUartHandlerTask(void *pvParameters) {
-    uint8_t rx_byte;
     size_t bytes_to_read;
-    char * uartTxBuff;
+    char * uart_tx_ptr;
+    void (*new_point_cb_ptr)(Point2D * point_2D) = &new_point_cb;
+    void (*stop_cb_ptr)(void) = &stop_cb;
 
+    CommandsParser cmds_parser = CommandsParser(new_point_cb_ptr, stop_cb_ptr);
+    printf("Starting UART handler task\n");
     for( ;; )
     {
         // Writing to UART, non-blocking
-        if (xQueueReceive(uartTxQueue, &uartTxBuff, 0) == pdPASS) {
-            uart_puts(UART_CTRL_ID, uartTxBuff);
+        if (xQueueReceive(queue_uart_tx, &uart_tx_ptr, 0) == pdPASS) {
+            printf("UART task received something from Queue\n");
+            uart_puts(UART_CTRL_ID, uart_tx_ptr);
         }
-        
+
         // Reading from UART, non-blocking
-        if (xSemaphoreTake(uartMutex, 0) == pdTRUE) {
-            bytes_to_read = uart_is_readable(UART_CTRL_ID);
-            if (bytes_to_read > UART_CTRL_BUFF_SIZE) {
-                printf(
-                    "WARNING! UART is reading data slower then data appears. "
-                    "Bytes to read: %d, buffer size: %d\n",
-                    bytes_to_read, UART_CTRL_BUFF_SIZE);
+        bytes_to_read = uart_is_readable(UART_CTRL_ID);
+        if (0 != bytes_to_read) {
+            for (int i = 0; i < bytes_to_read; i++) {
+                cmds_parser.parse(uart_getc(UART_CTRL_ID));
             }
-            if (bytes_to_read) {
-                if (uart_buffer_counter + bytes_to_read >= UART_CTRL_BUFF_SIZE) {
-                    printf(
-                        "ERROR! UART RX buffer should store more information than it can\n");
-                    printf("Resetting UART RX buffer. The data will be lost\n");
-                    uart_buffer_counter = 0;
-                }
-                for (int i=0; i < bytes_to_read; i++) {
-                    uart_buffer[i + uart_buffer_counter] = uart_getc(UART_CTRL_ID);
-                }
-            }
-            xSemaphoreGive(uartMutex);
         }
         vTaskDelay(pdMS_TO_TICKS(10));
     }

@@ -31,9 +31,8 @@
 
 #define UART_CTRL_ID        uart1
 #define UART_CTRL_BAUD_RATE 460800
-#define UART_CTRL_BUFF_SIZE 256
 
-// JOYSTICK
+
 // contains raw measurements from joystick
 struct __attribute__((__packed__)) JoystickRawData {
     uint32_t x;
@@ -41,33 +40,6 @@ struct __attribute__((__packed__)) JoystickRawData {
     bool ext_control;
 };
 
-// Conversion from joystick to engine state
-/*
-What we get from joystick?
-0..4095 as a full range.
-
-Regarding joystick position:
-0..2047 - left
-2048..4095 - right
-
-How we interpret these values?
-2048 - DEAD_ZONE ... 2048 + DEAD_ZONE - safe zone / dead zone / neutral
-
-0 ... 2048 - DEAD_ZONE - 'backward'/'left'
-2048 + DEAD_ZONE ... 4095 - 'forward'/'right'
-*/
-#define DEAD_ZONE               50
-#define DEAD_ZONE_START         2048 - DEAD_ZONE
-#define DEAD_ZONE_END           2048 + DEAD_ZONE
-#define TURN_COEF               0.60    // this coefficient is chosen after several experiments
-#define ADC_TO_PERCENTAGE       100.0 / 2048.0
-#define JOYSTICK_TIMEOUT_SEC    1.0
-
-
-// Engine Power state
-// const char UART_ENGINES_DATA_HEADER[] = {'A', 'A'};
-
-// Do I still need it?
 // left -100 ... 100
 // right -100 ... 100
 struct __attribute__((__packed__)) EnginesPwr {
@@ -85,13 +57,14 @@ struct DriverControlData {
 };
 
 // everything in meters + radians
-struct SensorsData {
-    float d_x;
-    float d_y;
-    float d_vx;
-    float d_vy;
-    float d_heading;
-};
+// TBD - Do I need it?
+// struct SensorsData {
+//     float d_x;
+//     float d_y;
+//     float d_vx;
+//     float d_vy;
+//     float d_heading;
+// };
 
 // ODOMETER
 // describes the count of holes in used for odometer disk
@@ -99,3 +72,8 @@ struct SensorsData {
 // #define ODOMETER_COUNT_OF_HOLES_IN_DISK     20
 #define WHEEL_DIAMETER_M                    0.064
 #define VEHICLE_BASE_SIZE_M                 0.13
+
+struct __attribute__((__packed__)) Point2D {
+    float x;
+    float y;
+};

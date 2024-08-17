@@ -2,21 +2,13 @@
 #include <stdio.h>
 
 #include "controlArbiterTask.h"
-#include "sensorFusionTask.h"
+#include "uartHandlerTask.h"
 #include "motorDriver.h"
-#include "controller.h"
 #include "../utils.h"
+#include "joystick.h"
+#include "autonomousMode.h"
 
-
-SemaphoreHandle_t inputResolverRfDataMutex;
-SemaphoreHandle_t inputResolverPathPlanningMutex;
-
-bool ext_control = false;
-struct EnginesPwr rf_engines_pwr = {0, 0};
-TickType_t lastRFDataTick = 0.0;
-
-PathPlanningData inp_res_pp_data = {0,0,0,0};
-bool pp_updated = false;
+#define JOYSTICK_TIMEOUT_SEC    1.0
 
 
 void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
@@ -34,6 +26,19 @@ void setupControlArbiterTask( void )
 
 void runControlArbiterTask( void *pvParameters )
 {
+    EnginesPwr engines_pwr = {0, 0};
+    DriverControlData d;
+    bool ext_ctrl = false;
+    bool ext_ctrl_prev = false;
+    bool joy_notified_once = false;
+
+    Joystick joystick = Joystick();
+    TickType_t lastJoyRxTick = xTaskGetTickCount();
+    float secSinceLastJoyRx;
+
+    Point2D point_2D; // new task for path planning
+    AutonomousMode autoMode = AutonomousMode();
+
     TickType_t xNextWakeTime;
     const unsigned long ulValueToSend = 100UL;
 
@@ -43,80 +48,70 @@ void runControlArbiterTask( void *pvParameters )
     /* Initialise xNextWakeTime - this only needs to be done once. */
     xNextWakeTime = xTaskGetTickCount();
 
-    TickType_t lastCmdTicks = xTaskGetTickCount();
-    TickType_t sinceLastCmdTicks = 0;
-    float sinceLastCmdSec = 0.0;
-
-    bool _ext_control;
-    struct EnginesPwr _engines_pwr;
-    TickType_t _lastRFDataTick = xTaskGetTickCount();
-
-    PathPlanningData _path_planning_data;
-    bool _pp_updated;
-
-    float secSinceLastRFData;
-
-    DriverControlData driver;
-    SensorsData sensors_data;
-
-    Controller controller = Controller();
 
     for( ;; )
     {
-        // non blocking!
-        if (xSemaphoreTake(inputResolverRfDataMutex, 0) == pdTRUE) {
-            // copying the state of global variables to local variables
-            _ext_control = ext_control;
-            _engines_pwr = rf_engines_pwr;
-            _lastRFDataTick = lastRFDataTick;
-            xSemaphoreGive(inputResolverRfDataMutex);
-        }
+        if (true == joystick.receive(engines_pwr, ext_ctrl)) {
+            joy_notified_once = false;
+            // printf("Received data from joystick\n");
+            gpio_put(RADIO_LED_PIN, 1);
+            // update timings
+            lastJoyRxTick = xTaskGetTickCount();
 
-        // Do we need it????
-        // non blocking!
-        if (xSemaphoreTake(inputResolverPathPlanningMutex, 0) == pdTRUE) {
-            // copying the state of global variables to local variables
-            _pp_updated = pp_updated;
-            _path_planning_data = inp_res_pp_data;
-            xSemaphoreGive(inputResolverPathPlanningMutex);
-        }
-
-        secSinceLastRFData = secondsSinceLastTick(_lastRFDataTick);
-        
-        if (secSinceLastRFData > JOYSTICK_TIMEOUT_SEC) {
-            // no data from joystick since reasonable amount of time
-            gpio_put(RADIO_LED_PIN, 0); // LED indication
-            // stopping the car
-            driver.direction_A = OFF; driver.direction_B = OFF;
-        } else {
-            // fresh data from joystick
-            gpio_put(RADIO_LED_PIN, 1); // LED indication
-            if (_ext_control) {
-                printf("ext control TRUE branch\n");
-                if ( true == _pp_updated ) {
-                    // ?
-                    controller.start(_path_planning_data);
-                    reset_sensor_fusion_task();
+            if (true == ext_ctrl) {
+                // ext control
+                if (true == check_new_point_parsed(point_2D)) {
+                    autoMode.init(point_2D);
+                } else if (true == stop_cmd_received()) {
+                    autoMode.reset();
                 } else {
-                    read_fused_sensors_data(sensors_data);
-                    // ?
-                    controller.update(_engines_pwr, sensors_data);
-                    dataEnginesToDriver(_engines_pwr, driver);
+                    autoMode.update();
                 }
+
+                if (true == autoMode.is_done()) {
+                    send_done();
+                }
+
             } else {
-                printf("ext control FALSE branch\n");
-                //somehow synchronize with driver task
-                dataEnginesToDriver(_engines_pwr, driver);
+                // manual ctrl
+                if ((true == ext_ctrl_prev) && (false == ext_ctrl)) {
+                    // when the switching between auto control
+                    // and ext control happened, we should
+                    // notify ext PC
+                    send_abort();
+                    // reset the state of automode
+                    autoMode.reset();
+                }
+
+                // joystick has first priotity
+                dataEnginesToDriver(engines_pwr, d);
+                runMotorDriver(d);
+            }
+            ext_ctrl_prev = ext_ctrl;
+        } else {
+            secSinceLastJoyRx = secondsSinceLastTick(lastJoyRxTick);
+
+            if ((secSinceLastJoyRx > JOYSTICK_TIMEOUT_SEC) &&
+                    (false == joy_notified_once)) {
+                joy_notified_once = true;
+                // no data from joystick since reasonable amount of time
+                gpio_put(RADIO_LED_PIN, 0);
+                // stopping the car
+                d.direction_A = OFF; d.direction_B = OFF;
+                d.duty_cycle_A = 0; d.duty_cycle_B = 0;
+                runMotorDriver(d);
+
+                send_abort();
+                autoMode.reset();
             }
         }
-        runMotorDriver(driver);
 
         // 10 msec delay ~ 100 Hz
         vTaskDelay(pdMS_TO_TICKS( 10 ));
     }
 }
 
-void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver) {
+void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & d) {
     auto helper = [](int32_t e, int & dir, int & duty) -> void {
         if (e == 0) {
             dir = OFF;
@@ -130,6 +125,6 @@ void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver) {
         }
     };
 
-    helper(engines.left, driver.direction_A, driver.duty_cycle_A);
-    helper(engines.right, driver.direction_B, driver.duty_cycle_B);
+    helper(engines.left, d.direction_A, d.duty_cycle_A);
+    helper(engines.right, d.direction_B, d.duty_cycle_B);
 }

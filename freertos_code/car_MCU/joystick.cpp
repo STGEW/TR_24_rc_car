@@ -1,19 +1,7 @@
-#include <stdio.h>
-#include <RF24.h>
-#include "controlArbiterTask.h"
-#include "../const.h"
+#include "joystick.h"
 
 
-// instantiate an object for the nRF24L01 transceiver
-static RF24 radio(CE_PIN, CSN_PIN);
-static bool role = false; // true = TX role, false = RX role
-static struct JoystickRawData joystick;
-
-
-void convertJoystickToEngineState(JoystickRawData & joy, EnginesPwr & pwr);
-
-void setupRfRxTask()
-{
+Joystick::Joystick() {
     uint8_t address[][6] = {"1Node", "2Node"};
     bool radioNumber = 1;
 
@@ -23,7 +11,7 @@ void setupRfRxTask()
         return;
     }
     radio.setPALevel(RF24_PA_LOW);
-    radio.setPayloadSize(sizeof(joystick)); // float datatype occupies 4 bytes
+    radio.setPayloadSize(sizeof(JoystickRawData)); // float datatype occupies 4 bytes
     // set the TX address of the RX node into the TX pipe
     radio.openWritingPipe(address[radioNumber]); // always uses pipe 0
     // set the RX address of the TX node into a RX pipe
@@ -37,46 +25,25 @@ void setupRfRxTask()
     else {
         radio.startListening(); // put radio in RX mode
     }
-
 }
 
-void runRfRxTask( void *pvParameters )
+bool Joystick::receive(EnginesPwr &engines_pwr, bool &ext_ctrl)
 {
-
-    TickType_t xNextWakeTime;
-    const unsigned long ulValueToSend = 100UL;
-
-    ( void ) pvParameters;
-
-    /* Initialise xNextWakeTime - this only needs to be done once. */
-    xNextWakeTime = xTaskGetTickCount();
-
-    for( ;; ) {
-        uint8_t pipe;
-        if (radio.available()) {
-            uint8_t bytes = radio.getPayloadSize(); // get the size of the payload
-            radio.read(&joystick, bytes);            // fetch payload from FIFO
-            // printf("RF Received %d bytes: %u %u %s\n",
-            //     bytes,
-            //     joystick.x, joystick.y,
-            //     joystick.ext_control ? "true" : "false");
-
-            lastRFDataTick = xTaskGetTickCount();
-            if (xSemaphoreTake(inputResolverRfDataMutex, portMAX_DELAY) == pdTRUE) {
-                convertJoystickToEngineState(joystick, rf_engines_pwr);
-                ext_control = joystick.ext_control;
-                xSemaphoreGive(inputResolverRfDataMutex);
-            }
-        } else {
-            // printf("RADIO IS NOT AVAIL\n");
-        }
-
-        // 10 msec delay ~ 100 Hz
-        vTaskDelay(pdMS_TO_TICKS( 10 ));
+    bool is_avail = radio.available();
+    if (true == is_avail) {
+        uint8_t bytes = radio.getPayloadSize();
+        radio.read(&joystick, bytes);
+        // printf("RF Received %d bytes: %u %u %s\n",
+        //     bytes,
+        //     joystick.x, joystick.y,
+        //     joystick.ext_control ? "true" : "false");
+        convToEnginesPwrs(joystick, engines_pwr);
+        ext_ctrl = joystick.ext_control;
     }
+    return is_avail;
 }
 
-void convertJoystickToEngineState(JoystickRawData & joy, EnginesPwr & pwr) {
+void Joystick::convToEnginesPwrs(JoystickRawData & joy, EnginesPwr & pwr) {
 
     int turn = 0;
     int forward = 0;

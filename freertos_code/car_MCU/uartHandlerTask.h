@@ -2,18 +2,25 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
-
+#include "commandsParser.h"
 #include "../const.h"
 
-// you can work with uart buffer only when get this mutex
-extern SemaphoreHandle_t uartMutex;
 // queue to send something to uart
-extern QueueHandle_t uartTxQueue;
-// buffer to get received from UART data
-extern uint8_t uart_buffer[UART_CTRL_BUFF_SIZE];
+// it contains const char * inside
+extern QueueHandle_t queue_uart_tx;
+extern QueueHandle_t queue_points_2D;
+extern SemaphoreHandle_t uartStopCMDMutex;
+extern bool stop_cmd_flag;
 
-extern int uart_buffer_counter;
+// interface for communicating with ext PC
+void send_done();
+void send_ok();
+void send_abort();
+bool check_new_point_parsed(Point2D &point_2D);
+bool stop_cmd_received();
 
 void setupUartHandlerHardware();
 void runUartHandlerTask(void *pvParameters);
+
+
 

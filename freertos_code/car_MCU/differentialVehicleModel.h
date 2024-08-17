@@ -25,7 +25,7 @@ struct OdometerValues {
     float phi2;     // estimation of new yaw angle at point 2
 };
 
-class DifferentialVehicleModel{
+class DifferentialVehicleModel {
 public:
     // wheel_base - a distance between left and right wheels in meters, f.e. 0.15 m
     // wheels_radius - a radius of wheel in meters, f.e. 0.065 m
@@ -61,7 +61,7 @@ private:
     // delta_n - count of holes measured by odometer
     float calc_delta_d(int delta_n);
 
-    // turining radius. can be called only when delta_d_r != delta_d_l
+    // turning radius. can be called only when delta_d_r != delta_d_l
     // delta_d_r (float) - meters of movement right side
     // delta_d_l (float) - meters of movement left side
     // return turning_radius (meters)

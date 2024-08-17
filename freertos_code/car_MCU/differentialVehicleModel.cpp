@@ -28,26 +28,27 @@ void DifferentialVehicleModel::odometer_to_position_diff(
     //     "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
     //     wheels_base, wheels_radius, odometer_holes_count);
 
-    printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
+    // printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
     float delta_d_r = calc_delta_d(delta_n_r);
     float delta_d_l = calc_delta_d(delta_n_l);
 
-    printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
+    // printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
     float turn_radius = calc_turning_radius(
         delta_d_r, delta_d_l);
 
-    printf("turn_radius: %f\n", turn_radius);
+    // printf("turn_radius: %f\n", turn_radius);
     float delta_phi = calc_delta_phi(
         delta_d_r, delta_d_l, turn_radius);
 
-    printf("delta_phi: %f\n", delta_phi);
+    // printf("delta_phi: %f\n", delta_phi);
     float phi_prev = phi;
     phi += delta_phi;
-    printf("phi: %f\n", phi);
+    // printf("phi: %f\n", phi);
     position_diff.x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
     position_diff.y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
     position_diff.phi = phi;
-    printf("delta x: %f, delta y: %f\n", position_diff.x, position_diff.y);
+    printf("delta x: %f, delta y: %f delta phi: %f\n",
+        position_diff.x, position_diff.y, position_diff.phi);
 }
 
 
@@ -184,7 +185,7 @@ void DifferentialVehicleModel::convert_delta_phi_to_n(
 void DifferentialVehicleModel::convert_delta_phi_to_dist_m(
         float delta_phi, float &dist_l_m, float &dist_r_m) {
     float dist_m = fabs(delta_phi) * (wheels_base / 2.0f);
-    printf("For delta phi: %f dist: %3f\n", delta_phi, dist_m);
+    // printf("For delta phi: %f dist: %3f\n", delta_phi, dist_m);
 
     if (delta_phi < 0) {
         dist_l_m = dist_m;
@@ -205,8 +206,8 @@ void DifferentialVehicleModel::convert_delta_phi_to_dist_m(
 
 int DifferentialVehicleModel::convert_dist_m_to_n(float dist_m) {
     float n = (dist_m * odometer_holes_count) / (2.0f * M_PI * wheels_radius);
-    printf("For dist_m: %f n: %f\n", dist_m, n);
+    // printf("For dist_m: %f n: %f\n", dist_m, n);
     int rounded_n = round(n);
-    printf("Rounding n: %d\n", rounded_n);
+    // printf("Rounding n: %d\n", rounded_n);
     return rounded_n;
 }

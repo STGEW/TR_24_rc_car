@@ -23,17 +23,15 @@ pico_sdk_init()
 add_executable(main_car_mcu
         main.cpp
         motorDriver.cpp
+        autonomousMode.cpp
         controlArbiterTask.cpp
         cameraServoTask.cpp
         imuRawTask.cpp
         uartHandlerTask.cpp
-        sensorFusionTask.cpp
-        rfRxTask.cpp
+        joystick.cpp
         IntQueueTimer.c
         commandsParser.cpp
         odometerTask.cpp
-        controller.cpp
-        pid_controller.cpp
         differentialVehicleModel.cpp
         ../utils.cpp
         RegTest.s

@@ -19,7 +19,8 @@
 #define REVERSE         3
 #define BRAKE           4
 
-#define DRIVER_COEF     65535 / 100
+#define DRIVER_MAX_VALUE     65535
+#define DRIVER_COEF          DRIVER_MAX_VALUE / 100
 
 void setupMotorDriver( void );
 void runMotorDriver( DriverControlData & data );
