@@ -71,7 +71,8 @@ struct DriverControlData {
 #define ODOMETER_COUNT_OF_HOLES_IN_DISK     40
 // #define ODOMETER_COUNT_OF_HOLES_IN_DISK     20
 #define WHEEL_DIAMETER_M                    0.064
-#define VEHICLE_BASE_SIZE_M                 0.13
+// 0.13, 0.135, 0.11 - very good
+#define VEHICLE_BASE_SIZE_M                 0.10
 
 struct __attribute__((__packed__)) Point2D {
     float x;

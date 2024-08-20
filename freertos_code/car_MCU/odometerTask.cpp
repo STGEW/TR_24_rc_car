@@ -31,10 +31,11 @@ void odometer_gpio_callback(uint gpio, uint32_t events) {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     if ((gpio == ODOMETER_LEFT_PIN) && (events & GPIO_IRQ_EDGE_FALL)) {
         vTaskNotifyGiveFromISR(xOdometerLeftTaskHandle, &xHigherPriorityTaskWoken);
-    } else if ((gpio == ODOMETER_RIGHT_PIN) && (events & GPIO_IRQ_EDGE_FALL)) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    } else if (gpio == ODOMETER_RIGHT_PIN && (events & GPIO_IRQ_EDGE_FALL)) {
         vTaskNotifyGiveFromISR(xOdometerRightTaskHandle, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 
@@ -45,6 +46,7 @@ void setupOdometerTask( void ) {
         gpio_pull_up(pin);
         gpio_set_irq_enabled_with_callback(
             pin,
+            // GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
             GPIO_IRQ_EDGE_FALL,
             true,
             &odometer_gpio_callback);
@@ -60,6 +62,7 @@ void runOdometerLeftTask( void *pvParameters )
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
             odometer_left_count++;
+            // printf("odo left: %d\n", odometer_left_count);
             xSemaphoreGive(odometerMutex);
         }
     }
@@ -71,6 +74,7 @@ void runOdometerRightTask( void *pvParameters )
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         if (xSemaphoreTake(odometerMutex, portMAX_DELAY) == pdTRUE) {
             odometer_right_count++;
+            // printf("odo right: %d\n", odometer_right_count);
             xSemaphoreGive(odometerMutex);
         }
     }

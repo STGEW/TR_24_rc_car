@@ -59,10 +59,15 @@ void DifferentialVehicleModel::path_to_odometer_values(
     odometer_values.phi2 = atan2(
         path_chunk.y2 - path_chunk.y1,
         path_chunk.x2 - path_chunk.x1);
+    printf("Phi 2: %f\n", odometer_values.phi2);
     float dist_m = sqrt(
         square(path_chunk.x2 - path_chunk.x1) +
         square(path_chunk.y2 - path_chunk.y1));
     float delta_phi = odometer_values.phi2 - path_chunk.phi1;
+    // normalizing angles
+    while (delta_phi > M_PI) delta_phi -= 2.0 * M_PI;
+    while (delta_phi < -M_PI) delta_phi += 2.0 * M_PI;
+    printf("Delta phi: %f\n", delta_phi);
 
     // step 1 - change phi angle
     convert_delta_phi_to_n(delta_phi,
@@ -112,7 +117,7 @@ float DifferentialVehicleModel::calc_delta_phi(float delta_d_r, float delta_d_l,
     }
     // delta_d_l != delta_d_r
     if (turn_radius == 0.0f) {
-        return delta_d_l / wheels_base;
+        return delta_d_l / (wheels_base);
     } else {
         // turn_radius != 0.0
         return delta_d_r / turn_radius;
@@ -184,7 +189,7 @@ void DifferentialVehicleModel::convert_delta_phi_to_n(
 */
 void DifferentialVehicleModel::convert_delta_phi_to_dist_m(
         float delta_phi, float &dist_l_m, float &dist_r_m) {
-    float dist_m = fabs(delta_phi) * (wheels_base / 2.0f);
+    float dist_m = fabs(delta_phi) * (wheels_base);
     // printf("For delta phi: %f dist: %3f\n", delta_phi, dist_m);
 
     if (delta_phi < 0) {

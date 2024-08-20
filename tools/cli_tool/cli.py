@@ -57,7 +57,7 @@ def main():
                 ser.write(s)
                 ser.write('stop'.encode())
             elif 'p' in inp:
-                logger.info("You pressed 'p'. Point will be send")
+                logger.info(f"You pressed 'p'. Point will be send. Resp: '{inp}'")
                 _, x, y = inp.split(' ')
                 point = Point2D(x=float(x), y=float(y))
                 # Convert the struct to bytes
