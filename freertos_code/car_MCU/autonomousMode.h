@@ -33,6 +33,8 @@ private:
     );
 
     Vehicle2DPosition pos;
+    // pos_back - to track our position from diff model in real time
+    Vehicle2DPosition pos_back;
     Vehicle2DPosition pos_diff;
 
     // keep track how many odo events left

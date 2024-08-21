@@ -13,7 +13,8 @@ void AutonomousMode::reset() {
     state = AutonomousModeState::WAITING_FOR_TASK;
     diff_model.reset_internal_state();
     // reset the position
-    pos.x = 0.0; pos.y = 0.0; pos.phi = 0.0;
+    pos.x = 0.0f; pos.y = 0.0f; pos.phi = 0.0f;
+    pos_back.x = 0.0f; pos_back.y = 0.0f; pos_back.phi = 0.0f;
     // reset odometer balance
     odo_balance_l = 0;
     odo_balance_r = 0;
@@ -67,13 +68,13 @@ void AutonomousMode::update() {
     // TBD - something is wrong here
     // we will dynamically update the position
     // the problem is a sign. It's always +, but when we are changing the yaw, the sign can be different
-    // diff_model.odometer_to_position_diff(odo_cur_r, odo_cur_l, pos_diff);
-    // pos.x += pos_diff.x;
-    // pos.y += pos_diff.y;
-    // pos.phi += pos_diff.phi;
-    // printf(
-    //     "pos x: %f y: %f phi: %f\n",
-    //     pos.x, pos.y, pos.phi);
+    diff_model.odometer_to_position_diff(odo_cur_r, odo_cur_l, pos_diff);
+    pos_back.x += pos_diff.x;
+    pos_back.y += pos_diff.y;
+    pos_back.phi += pos_diff.phi;
+    printf(
+        "pos_back x: %f y: %f phi: %f\n",
+        pos_back.x, pos_back.y, pos_back.phi);
 
     switch (state) {
         case WAITING_FOR_TASK:

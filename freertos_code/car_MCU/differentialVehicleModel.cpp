@@ -28,25 +28,25 @@ void DifferentialVehicleModel::odometer_to_position_diff(
     //     "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
     //     wheels_base, wheels_radius, odometer_holes_count);
 
-    // printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
+    printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
     float delta_d_r = calc_delta_d(delta_n_r);
     float delta_d_l = calc_delta_d(delta_n_l);
 
-    // printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
+    printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
     float turn_radius = calc_turning_radius(
         delta_d_r, delta_d_l);
 
-    // printf("turn_radius: %f\n", turn_radius);
+    printf("turn_radius: %f\n", turn_radius);
     float delta_phi = calc_delta_phi(
         delta_d_r, delta_d_l, turn_radius);
 
-    // printf("delta_phi: %f\n", delta_phi);
+    printf("delta_phi: %f\n", delta_phi);
     float phi_prev = phi;
     phi += delta_phi;
-    // printf("phi: %f\n", phi);
+    printf("phi: %f\n", phi);
     position_diff.x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
     position_diff.y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
-    position_diff.phi = phi;
+    position_diff.phi = delta_phi;
     printf("delta x: %f, delta y: %f delta phi: %f\n",
         position_diff.x, position_diff.y, position_diff.phi);
 }
@@ -117,10 +117,12 @@ float DifferentialVehicleModel::calc_delta_phi(float delta_d_r, float delta_d_l,
     }
     // delta_d_l != delta_d_r
     if (turn_radius == 0.0f) {
-        return delta_d_l / (wheels_base);
+        return delta_d_r / (wheels_base);
+    } else if (turn_radius < 0.0f){
+        return (-1.0) * delta_d_r / turn_radius;
     } else {
-        // turn_radius != 0.0
-        return delta_d_r / turn_radius;
+        // turn_radius > 0.0
+        return delta_d_l / turn_radius;
     }
 }
 
@@ -135,11 +137,15 @@ float DifferentialVehicleModel::calc_x(
         float delta_d_r, float delta_d_l,
         float phi_prev, float phi,
         float turn_radius) {
-    if (delta_d_r == delta_d_l) {
-        return sin(phi) * (delta_d_r + delta_d_l) / 2.0f;
+    if (INFINITY == turn_radius) {
+        return cos(phi) * (delta_d_r + delta_d_l) / 2.0f;
+    } else if (0.0f == turn_radius) {
+        return 0.0f;
     }
-    return (turn_radius + wheels_base / 2.0) * (
-        sin(phi_prev + M_PI / 2.0f) + sin(phi - M_PI / 2.0f));
+    // I have doubts in that equation, but we don't use that case
+    // return (turn_radius + wheels_base / 2.0) * (
+    //     sin(phi_prev + M_PI / 2.0f) + sin(phi - M_PI / 2.0f));
+    return turn_radius * (sin(phi) - sin(phi_prev));
 }
     
 // at i interval
@@ -153,11 +159,15 @@ float DifferentialVehicleModel::calc_y(
         float delta_d_r, float delta_d_l,
         float phi_prev, float phi,
         float turn_radius) {
-    if (delta_d_r == delta_d_l) {
-        return cos(phi) * (delta_d_r + delta_d_l) / 2.0f;
+    if (INFINITY == turn_radius) {
+        return sin(phi) * (delta_d_r + delta_d_l) / 2.0f;
+    } else if (0.0f == turn_radius) {
+        return 0.0f;
     }
-    return (turn_radius + wheels_base / 2.0f) * (
-            cos(phi_prev + M_PI / 2.0f) + cos(phi - M_PI / 2.0f));
+    // I have doubts in that equation, but we don't use that case
+    // return (turn_radius + wheels_base / 2.0f) * (
+    //         cos(phi_prev + M_PI / 2.0f) + cos(phi - M_PI / 2.0f));
+    return turn_radius * (cos(phi_prev) - cos(phi));
 }
 
 /*
