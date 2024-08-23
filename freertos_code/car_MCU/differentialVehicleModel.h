@@ -26,12 +26,33 @@ struct OdometerValues {
 };
 
 class DifferentialVehicleModel {
+
 public:
     // wheel_base - a distance between left and right wheels in meters, f.e. 0.15 m
     // wheels_radius - a radius of wheel in meters, f.e. 0.065 m
     // odometer_holes_count - total count of holes in a wheel, f.e. 20
     DifferentialVehicleModel(
         float _wheels_base, float _wheels_radius, int _odometer_holes_count);
+
+    // new interface
+    // no need to keep state
+    // dist - meters, float
+    int dist_diff_to_odo(float dist);
+
+    // returns a odo for right wheel.
+    // positive d_yar means position right wheel odo value
+    // left odo value = -1 * right odo value
+    int yaw_diff_to_odo(float yaw);
+
+    // delta_n is expected position
+    // direction information in clockwise flag
+    void odo_to_pos_rotate(int delta_n, bool clockwise, Vehicle2DPosition &d_pos);
+    
+    // we expect delta_n - position and direction info inside
+    // forward flag
+    void odo_to_pos_linear(
+        int delta_n, bool forward,
+        float phi, Vehicle2DPosition &d_pos);
 
     // Calculate the position of vehicle
     // int delta_n_r - count of measured holes from the right odometer

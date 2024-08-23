@@ -1,5 +1,5 @@
-wheels_base: 0.20
-wheel_radius: 0.065
-max_n: 20
+wheels_base: 0.10
+wheel_radius: 0.064
+max_n: 40
 timestep_sec: 0.5
 scene_margin_m: 0.5

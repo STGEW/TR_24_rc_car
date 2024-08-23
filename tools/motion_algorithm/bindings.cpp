@@ -32,5 +32,10 @@ PYBIND11_MODULE(differential_vehicle_model, m) {
         .def(py::init<float, float, int>())
         .def("odometer_to_position_diff", &DifferentialVehicleModel::odometer_to_position_diff)
         .def("path_to_odometer_values", &DifferentialVehicleModel::path_to_odometer_values)
-        .def("reset_internal_state", &DifferentialVehicleModel::reset_internal_state);
+        .def("reset_internal_state", &DifferentialVehicleModel::reset_internal_state)
+        .def("dist_diff_to_odo", &DifferentialVehicleModel::dist_diff_to_odo)
+        .def("yaw_diff_to_odo", &DifferentialVehicleModel::yaw_diff_to_odo)
+        .def("odo_to_pos_rotate", &DifferentialVehicleModel::odo_to_pos_rotate)
+        .def("odo_to_pos_linear", &DifferentialVehicleModel::odo_to_pos_linear);
 }
+

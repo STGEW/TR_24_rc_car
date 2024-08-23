@@ -30,10 +30,8 @@ ln -s ../../freertos_code/car_MCU/differentialVehicleModel.cpp differentialVehic
 <code>
 mkdir build
 cd build
-cmake ..
-make
-cd ../
-mv build/libdifferential_vehicle_model.so ./differential_vehicle_model.so
+cmake .. && make
+mv libdifferential_vehicle_model.so ../differential_vehicle_model.so
 </code>
 
 
@@ -53,3 +51,5 @@ mv build/libdifferential_vehicle_model.so ./differential_vehicle_model.so
 <code>python ./plot_pathes.py --path1 data/path_2.json --path2 ~/projects/tmp/motion_cpp.json --name cpp</code>
 <code>python ./plot_pathes.py --path1 data/path_2.json --path2 ~/projects/tmp/motion_py.json --name py</code>
 
+#### Run unit tests
+<code>python ./unit_tests.py</code>

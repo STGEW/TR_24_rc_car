@@ -11,7 +11,8 @@ AutonomousMode::AutonomousMode() {
 
 void AutonomousMode::reset() {
     state = AutonomousModeState::WAITING_FOR_TASK;
-    diff_model.reset_internal_state();
+    // there is no more need because there is no internal state
+    // diff_model.reset_internal_state();
     // reset the position
     pos.x = 0.0f; pos.y = 0.0f; pos.phi = 0.0f;
     pos_back.x = 0.0f; pos_back.y = 0.0f; pos_back.phi = 0.0f;

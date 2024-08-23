@@ -16,6 +16,55 @@ DifferentialVehicleModel::DifferentialVehicleModel(float _wheels_base,
 }
 
 
+// no need to keep state
+// dist - meters, float
+int DifferentialVehicleModel::dist_diff_to_odo(float d_dist) {
+    return convert_dist_m_to_n(d_dist);
+}
+
+// returns a odo for right wheel.
+// positive d_yar means position right wheel odo value
+// left odo value = -1 * right odo value
+int DifferentialVehicleModel::yaw_diff_to_odo(float d_yaw) {
+    // 1. yaw diff to dist
+    float d_dist = d_yaw * (wheels_base / 2.0);
+    // 2. dist to odo
+    return convert_dist_m_to_n(d_dist);
+
+}
+
+// delta_n is expected position
+// direction information in clockwise flag
+void DifferentialVehicleModel::odo_to_pos_rotate(
+        int delta_n, bool clockwise,
+        Vehicle2DPosition &d_pos) {
+    d_pos.x = 0.0f; d_pos.y = 0.0f;
+    // a dist that wheel will move
+    float d_dist = ((float) delta_n / (float) odometer_holes_count) * 2 * M_PI * wheels_radius;
+    // we are rotation around the center of vehicle
+    d_pos.phi = d_dist / (wheels_base / 2.0);
+
+    if (true == clockwise) {
+        // negative direction
+        d_pos.phi = -1.0f * d_pos.phi;
+    }
+}
+
+// we expect delta_n - position and direction info inside
+// forward flag
+void DifferentialVehicleModel::odo_to_pos_linear(
+        int delta_n, bool forward,
+        float phi, Vehicle2DPosition &d_pos) {
+    float d_dist = ((float) delta_n / (float) odometer_holes_count) * 2 * M_PI * wheels_radius;
+    d_pos.x = d_dist * cos(phi);
+    d_pos.y = d_dist * sin(phi);
+    if (false == forward) {
+        d_pos.x = -1.0f * d_pos.x;
+        d_pos.y = -1.0f * d_pos.y;
+    }
+}
+
+
 // Calculate the state of vehicle
 // int delta_n_r - count of measured holes from the right odometer
 // int delta_n_l - count of measured holes from the left odometer
@@ -28,54 +77,93 @@ void DifferentialVehicleModel::odometer_to_position_diff(
     //     "wheels_base: %f wheels_radius: %f odometer_holes_count: %d\n",
     //     wheels_base, wheels_radius, odometer_holes_count);
 
-    printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
-    float delta_d_r = calc_delta_d(delta_n_r);
-    float delta_d_l = calc_delta_d(delta_n_l);
+    // printf("update called with values: %d %d\n", delta_n_r, delta_n_l);
+    // float delta_d_r = calc_delta_d(delta_n_r);
+    // float delta_d_l = calc_delta_d(delta_n_l);
 
-    printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
-    float turn_radius = calc_turning_radius(
-        delta_d_r, delta_d_l);
+    // printf("delta r: %f l: %f\n", delta_d_r, delta_d_l);
+    // float turn_radius = calc_turning_radius(
+    //     delta_d_r, delta_d_l);
 
-    printf("turn_radius: %f\n", turn_radius);
-    float delta_phi = calc_delta_phi(
-        delta_d_r, delta_d_l, turn_radius);
+    // printf("turn_radius: %f\n", turn_radius);
+    // float delta_phi = calc_delta_phi(
+    //     delta_d_r, delta_d_l, turn_radius);
 
-    printf("delta_phi: %f\n", delta_phi);
-    float phi_prev = phi;
-    phi += delta_phi;
-    printf("phi: %f\n", phi);
-    position_diff.x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
-    position_diff.y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
-    position_diff.phi = delta_phi;
-    printf("delta x: %f, delta y: %f delta phi: %f\n",
-        position_diff.x, position_diff.y, position_diff.phi);
+    // printf("delta_phi: %f\n", delta_phi);
+    // float phi_prev = phi;
+    // phi += delta_phi;
+    // printf("phi: %f\n", phi);
+    // position_diff.x = calc_x(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
+    // position_diff.y = calc_y(delta_d_r, delta_d_l, phi_prev, phi, turn_radius);
+    // position_diff.phi = delta_phi;
+    // printf("delta x: %f, delta y: %f delta phi: %f\n",
+    //     position_diff.x, position_diff.y, position_diff.phi);
 }
 
 
 // Convert a path chunk x1,y1,phi1,x2,y2 to expected from odometers values
 void DifferentialVehicleModel::path_to_odometer_values(
-        PathChunk &path_chunk,
-        OdometerValues &odometer_values) {
-    odometer_values.phi2 = atan2(
-        path_chunk.y2 - path_chunk.y1,
-        path_chunk.x2 - path_chunk.x1);
-    printf("Phi 2: %f\n", odometer_values.phi2);
-    float dist_m = sqrt(
-        square(path_chunk.x2 - path_chunk.x1) +
-        square(path_chunk.y2 - path_chunk.y1));
-    float delta_phi = odometer_values.phi2 - path_chunk.phi1;
-    // normalizing angles
-    while (delta_phi > M_PI) delta_phi -= 2.0 * M_PI;
-    while (delta_phi < -M_PI) delta_phi += 2.0 * M_PI;
-    printf("Delta phi: %f\n", delta_phi);
+        PathChunk &path,
+        OdometerValues &odo) {
 
-    // step 1 - change phi angle
-    convert_delta_phi_to_n(delta_phi,
-        odometer_values.angle_n_l,
-        odometer_values.angle_n_r);
+    printf("path_to_odometer_values\n");
+    // step 1 - calculate new phi angle
+    odo.phi2 = atan2(
+        path.y2 - path.y1,
+        path.x2 - path.x1);
 
-    // step 2 - change dist
-    odometer_values.dist_n = convert_dist_m_to_n(dist_m);
+    printf("phi2: %f\n", odo.phi2);
+    float d_yaw = odo.phi2 - path.phi1;
+
+    printf("d_yaw: %f\n", d_yaw);
+    if (fabs(d_yaw) < 0.005f) {
+        // no yaw change
+        printf("No yaw change\n");
+        odo.angle_n_r = 0;
+        odo.angle_n_l = 0;
+    } else {
+        // yaw change
+        printf("Yaw changed\n");
+        odo.angle_n_r = yaw_diff_to_odo(d_yaw);
+        odo.angle_n_l = -1 * odo.angle_n_r;
+        printf("odo angle r: %d l: %d\n", odo.angle_n_r, odo.angle_n_l);
+    }
+
+    float d_dist = sqrt(
+        square(path.x2 - path.x1) +
+        square(path.y2 - path.y1));
+    printf("odo d_dist: %f\n", d_dist);
+
+    if (fabs(d_dist) < 0.005f) {
+        // no pos change
+        odo.dist_n = 0.0f;
+    } else {
+        odo.dist_n = dist_diff_to_odo(d_dist);
+        printf("odo n count: %d\n", odo.dist_n);
+    }
+
+
+    // prev way
+    // odo.phi2 = atan2(
+    //     path.y2 - path.y1,
+    //     path.x2 - path.x1);
+    // printf("Phi 2: %f\n", odo.phi2);
+    // float dist_m = sqrt(
+    //     square(path.x2 - path.x1) +
+    //     square(path.y2 - path.y1));
+    // float delta_phi = odo.phi2 - path.phi1;
+    // // normalizing angles
+    // while (delta_phi > M_PI) delta_phi -= 2.0 * M_PI;
+    // while (delta_phi < -M_PI) delta_phi += 2.0 * M_PI;
+    // printf("Delta phi: %f\n", delta_phi);
+
+    // // step 1 - change phi angle
+    // convert_delta_phi_to_n(delta_phi,
+    //     odo.angle_n_l,
+    //     odo.angle_n_r);
+
+    // // step 2 - change dist
+    // odo.dist_n = convert_dist_m_to_n(dist_m);
 }
 
 // reset internal information of the model
