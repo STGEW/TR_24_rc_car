@@ -33,8 +33,6 @@ private:
     );
 
     Vehicle2DPosition pos;
-    // pos_back - to track our position from diff model in real time
-    Vehicle2DPosition pos_back;
     Vehicle2DPosition pos_diff;
 
     // keep track how many odo events left
@@ -44,6 +42,7 @@ private:
     // vars where we'll store reading from odometer
     uint32_t odo_cur_l;
     uint32_t odo_cur_r;
+    bool clockwise;
 
     DriverControlData d;
 
