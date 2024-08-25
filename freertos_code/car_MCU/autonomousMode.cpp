@@ -47,11 +47,6 @@ void AutonomousMode::init(Point2D &p) {
         path,
         odo_target_vals);
 
-    // Here we did update the position blindly
-    // but instead of that we want to do that dynamically
-    // pos.x = path.x2;
-    // pos.y = path.y2;
-    // pos.phi = odo_target_vals.phi2;
     printf(
         "Autonomous Mode. New coords would be x1: %f y1: %f phi1: %f\n",
         pos.x, pos.y, pos.phi);
