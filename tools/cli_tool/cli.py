@@ -2,7 +2,6 @@ import logging
 import argparse
 import serial
 import ctypes
-import keyboard
 import time
 
 
