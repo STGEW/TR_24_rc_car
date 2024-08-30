@@ -47,7 +47,7 @@ def main():
     try:
         while True:
             logger.info("loop")
-            inp = input("Input 's' or 'p 3.33 4.44' or 'r'\r\n")
+            inp = input("Input 's' 'p 3.33 4.44' 'r' 'd' 'a' 'o'\r\n")
             if 's' in inp:
                 logger.info("You pressed 's'. 'Stop' cmd will be send")
                 s = ctypes.c_ubyte(4).value.to_bytes(1, byteorder='little')
@@ -65,6 +65,15 @@ def main():
                 size_of_point = ctypes.sizeof(point)
                 ser.write(ctypes.c_ubyte(size_of_point).value.to_bytes(1, byteorder='little'))
                 ser.write(point_bytes)
+            elif 'd' in inp:
+                logger.info("You pressed 'd'. 'done' cmd will be send")
+                ser.write('done'.encode())
+            elif 'a' in inp:
+                logger.info("You pressed 'a'. 'abort' cmd will be send")
+                ser.write('abort'.encode())
+            elif 'o' in inp:
+                logger.info("You pressed 'o'. 'ok' cmd will be send")
+                ser.write('ok'.encode())
             elif 'r' in inp:
                 while True:
                     data = ser.read()
