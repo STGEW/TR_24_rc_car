@@ -6,36 +6,51 @@
 
 #include "uartHandlerTask.h"
 
-QueueHandle_t queue_uart_tx;
-QueueHandle_t queue_points_2D;
+QueueHandle_t q_uart_tx;
+QueueHandle_t q_target_point_2D;
+QueueHandle_t q_car_pos;
+
 SemaphoreHandle_t uartStopCMDMutex;
 
 static const char * resp_ok = "ok";
 static const char * resp_done = "done";
 static const char * resp_abort = "abort";
 
+static const char * prefix_cmd = "CM";
+static const char * prefix_pos_veh = "PV";
+
+
 bool stop_cmd_flag = false;
 
 void send_done() {
-    if (xQueueSend(queue_uart_tx, &resp_done, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(q_uart_tx, &resp_done, portMAX_DELAY) != pdPASS) {
         printf("Error! Can't send 'done' to UART queue\n");
     }
 }
 
 void send_abort() {
-    if (xQueueSend(queue_uart_tx, &resp_abort, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(q_uart_tx, &resp_abort, portMAX_DELAY) != pdPASS) {
         printf("Error! Can't send 'abort' to UART queue\n");
     }
 }
 
 void send_ok() {
-    if (xQueueSend(queue_uart_tx, &resp_ok, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(q_uart_tx, &resp_ok, portMAX_DELAY) != pdPASS) {
         printf("Error! Can't send 'ok' to UART queue\n");
     }
 }
 
+void send_position(Vehicle2DPosition &pos) {
+    if (xQueueSend(q_car_pos, &pos, portMAX_DELAY) != pdPASS) {
+        printf(
+            "Error! Can't send position of the car "
+            "x: %f y: %f phi: %f to UART queue\n",
+            pos.p.x, pos.p.y, pos.phi);
+    }
+}
+
 bool check_new_point_parsed(Point2D &point_2D) {
-    if (xQueueReceive(queue_points_2D, &point_2D, 0) == pdPASS) {
+    if (xQueueReceive(q_target_point_2D, &point_2D, 0) == pdPASS) {
         printf(
             "Reading new point x: %f y: %f from queue\n",
             point_2D.x, point_2D.y);
@@ -55,7 +70,7 @@ bool stop_cmd_received() {
 
 void new_point_cb(Point2D * p) {
     printf("New point cb called with values: x: %f y: %f\n", p->x, p->y);
-    if (xQueueSend(queue_points_2D, p, portMAX_DELAY) != pdPASS) {
+    if (xQueueSend(q_target_point_2D, p, portMAX_DELAY) != pdPASS) {
         printf(
             "Error! Can't send new point x: %f y: %f to queue\n",
             p->x, p->y);
@@ -82,6 +97,7 @@ void setupUartHandlerHardware()
 void runUartHandlerTask(void *pvParameters) {
     size_t bytes_to_read;
     char * uart_tx_ptr;
+    Vehicle2DPosition * veh_pos;
     void (*new_point_cb_ptr)(Point2D * point_2D) = &new_point_cb;
     void (*stop_cb_ptr)(void) = &stop_cb;
 
@@ -89,10 +105,23 @@ void runUartHandlerTask(void *pvParameters) {
     printf("Starting UART handler task\n");
     for( ;; )
     {
-        // Writing to UART, non-blocking
-        if (xQueueReceive(queue_uart_tx, &uart_tx_ptr, 0) == pdPASS) {
-            printf("UART task received something from Queue\n");
+        // Writing to UART strings, non-blocking
+        if (xQueueReceive(q_uart_tx, &uart_tx_ptr, 0) == pdPASS) {
+            printf("UART task received something from queue\n");
+            uart_puts(UART_CTRL_ID, prefix_cmd);
             uart_puts(UART_CTRL_ID, uart_tx_ptr);
+        }
+
+        // Writing to UART vehicle position, non-blocking
+        if (xQueueReceive(q_car_pos, &veh_pos, 0) == pdPASS) {
+            printf(
+                "UART task received vehicle position from queue. "
+                "x: %f y: %f phi: %f\n", 
+                veh_pos->p.x,
+                veh_pos->p.y,
+                veh_pos->phi);
+            uart_puts(UART_CTRL_ID, prefix_pos_veh);
+            uart_write_blocking(UART_CTRL_ID, (const uint8_t*)&veh_pos, sizeof(veh_pos));
         }
 
         // Reading from UART, non-blocking

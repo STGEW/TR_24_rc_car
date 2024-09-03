@@ -15,7 +15,7 @@ void AutonomousMode::reset() {
     // there is no more need because there is no internal state
     // diff_model.reset_internal_state();
     // reset the position
-    pos.x = 0.0f; pos.y = 0.0f; pos.phi = 0.0f;
+    pos.p.x = 0.0f; pos.p.y = 0.0f; pos.phi = 0.0f;
     // reset odometer balance
     odo_balance_l = 0;
     odo_balance_r = 0;
@@ -32,8 +32,8 @@ void AutonomousMode::init(Point2D &p) {
 
     PathChunk path;
 
-    path.x1 = pos.x;
-    path.y1 = pos.y;
+    path.x1 = pos.p.x;
+    path.y1 = pos.p.y;
     path.phi1 = pos.phi;
 
     path.x2 = p.x;
@@ -49,7 +49,7 @@ void AutonomousMode::init(Point2D &p) {
 
     printf(
         "Autonomous Mode. New coords would be x1: %f y1: %f phi1: %f\n",
-        pos.x, pos.y, pos.phi);
+        pos.p.x, pos.p.y, pos.phi);
 }
 
 bool AutonomousMode::is_done() {
@@ -145,17 +145,21 @@ void AutonomousMode::update() {
             break;
     }
 
-    pos.x += pos_diff.x; pos_diff.x = 0.0f;
-    pos.y += pos_diff.y; pos_diff.y = 0.0f;
+    pos.p.x += pos_diff.p.x; pos_diff.p.x = 0.0f;
+    pos.p.y += pos_diff.p.y; pos_diff.p.y = 0.0f;
     pos.phi += pos_diff.phi; pos_diff.phi = 0.0f;
     while (pos.phi > M_PI) pos.phi -= 2.0 * M_PI;
     while (pos.phi < -M_PI) pos.phi += 2.0 * M_PI;
 
     printf(
         "pos x: %f y: %f phi: %f\n",
-        pos.x, pos.y, pos.phi);
+        pos.p.x, pos.p.y, pos.phi);
 
     runMotorDriver(d);
+}
+
+void AutonomousMode::get_vehicle_pos(Vehicle2DPosition & _pos) {
+    _pos = pos;
 }
 
 void AutonomousMode::prepare_to_yaw(int &angle_n, int &motor_dir) {

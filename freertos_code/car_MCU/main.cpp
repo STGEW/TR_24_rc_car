@@ -73,18 +73,25 @@ void core_1_tasks( void )
 
     // Working with UART queues
     // To send something to UART
-    queue_uart_tx = xQueueCreate(10, sizeof(char*));
-    if (NULL == queue_uart_tx) {
-        printf("ERROR! queue_uart_tx can't be created\n");
+    q_uart_tx = xQueueCreate(10, sizeof(char*));
+    if (NULL == q_uart_tx) {
+        printf("ERROR! q_uart_tx can't be created\n");
         return;
     }
 
     // To read points from UART
-    queue_points_2D = xQueueCreate(10, sizeof(Point2D));
-    if (NULL == queue_points_2D) {
-        printf("ERROR! queue_points_2D can't be created\n");
+    q_target_point_2D = xQueueCreate(10, sizeof(Point2D));
+    if (NULL == q_target_point_2D) {
+        printf("ERROR! q_target_point_2D can't be created\n");
         return;
     }
+
+    // these are positions (x,y,phi) of the car
+    q_car_pos = xQueueCreate(20, sizeof(Vehicle2DPosition));
+    if (NULL == q_car_pos) {
+        printf("ERROR! q_car_pos can't be created\n");
+        return;
+    }    
 
     xTaskCreate( runControlArbiterTask, "runControlArbiterTask",
         configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL );

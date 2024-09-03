@@ -37,7 +37,7 @@ int DifferentialVehicleModel::yaw_diff_to_odo(float d_yaw) {
 void DifferentialVehicleModel::odo_to_pos_rotate(
         int delta_n, bool clockwise,
         Vehicle2DPosition &d_pos) {
-    d_pos.x = 0.0f; d_pos.y = 0.0f;
+    d_pos.p.x = 0.0f; d_pos.p.y = 0.0f;
     // a dist that wheel will move
     float d_dist = ((float) delta_n / (float) odometer_holes_count) * 2 * M_PI * wheels_radius;
     // we are rotation around the center of vehicle
@@ -55,11 +55,11 @@ void DifferentialVehicleModel::odo_to_pos_linear(
         int delta_n, bool forward,
         float phi, Vehicle2DPosition &d_pos) {
     float d_dist = ((float) delta_n / (float) odometer_holes_count) * 2 * M_PI * wheels_radius;
-    d_pos.x = d_dist * cos(phi);
-    d_pos.y = d_dist * sin(phi);
+    d_pos.p.x = d_dist * cos(phi);
+    d_pos.p.y = d_dist * sin(phi);
     if (false == forward) {
-        d_pos.x = -1.0f * d_pos.x;
-        d_pos.y = -1.0f * d_pos.y;
+        d_pos.p.x = -1.0f * d_pos.p.x;
+        d_pos.p.y = -1.0f * d_pos.p.y;
     }
 }
 

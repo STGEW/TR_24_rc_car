@@ -1,10 +1,6 @@
 #pragma once
+#include "../const.h"
 
-struct Vehicle2DPosition {
-    float x;
-    float y;
-    float phi;
-};
 
 struct PathChunk {
     float x1;       // current pos x

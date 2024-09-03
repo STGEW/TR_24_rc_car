@@ -20,6 +20,7 @@ public:
     void reset();
     bool is_done();
     void update();
+    void get_vehicle_pos(Vehicle2DPosition & pos);
 
 private:
 

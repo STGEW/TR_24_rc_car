@@ -56,16 +56,6 @@ struct DriverControlData {
     int duty_cycle_B;
 };
 
-// everything in meters + radians
-// TBD - Do I need it?
-// struct SensorsData {
-//     float d_x;
-//     float d_y;
-//     float d_vx;
-//     float d_vy;
-//     float d_heading;
-// };
-
 // ODOMETER
 // describes the count of holes in used for odometer disk
 #define ODOMETER_COUNT_OF_HOLES_IN_DISK     40
@@ -76,4 +66,9 @@ struct DriverControlData {
 struct __attribute__((__packed__)) Point2D {
     float x;
     float y;
+};
+
+struct __attribute__((__packed__)) Vehicle2DPosition {
+    Point2D p;
+    float phi;
 };

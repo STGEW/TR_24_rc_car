@@ -21,6 +21,12 @@ class Point2D(ctypes.Structure):
     _pack_ = 1  # Ensure the struct is packed (no padding between fields)
 
 
+class Vehicle2DPosition(ctypes.Structure):
+    _fields_ = [("p", Point2D),
+                ("phi", ctypes.c_float)]
+    _pack_ = 1  # Ensure the struct is packed (no padding between fields)
+
+
 def main():
     logger.info('Parsing arguments')
     parser = argparse.ArgumentParser()
@@ -46,8 +52,11 @@ def main():
 
     try:
         while True:
-            logger.info("loop")
-            inp = input("Input 's' 'p 3.33 4.44' 'r' 'd' 'a' 'o'\r\n")
+            inp = input(
+                "Input 's' 'p 3.33 4.44' "
+                "'v 0.50 0.3 3.14' "
+                "'r' 'd' 'a' 'o'\r\n")
+
             if 's' in inp:
                 logger.info("You pressed 's'. 'Stop' cmd will be send")
                 s = ctypes.c_ubyte(4).value.to_bytes(1, byteorder='little')
@@ -56,24 +65,43 @@ def main():
                 ser.write(s)
                 ser.write('stop'.encode())
             elif 'p' in inp:
-                logger.info(f"You pressed 'p'. Point will be send. Resp: '{inp}'")
+                logger.info(
+                    f"You pressed 'p'. Point will be send. "
+                    f"Input: '{inp}'")
                 _, x, y = inp.split(' ')
-                point = Point2D(x=float(x), y=float(y))
+                p = Point2D(x=float(x), y=float(y))
+                size_p = ctypes.sizeof(p)
                 # Convert the struct to bytes
-                point_bytes = ctypes.string_at(ctypes.byref(point), ctypes.sizeof(point))
+                p_bytes = ctypes.string_at(
+                    ctypes.byref(p), size_p)
                 ser.write("LF".encode())
-                size_of_point = ctypes.sizeof(point)
-                ser.write(ctypes.c_ubyte(size_of_point).value.to_bytes(1, byteorder='little'))
-                ser.write(point_bytes)
+                ser.write(
+                    ctypes.c_ubyte(size_p).value.to_bytes(
+                        1, byteorder='little'))
+                ser.write(p_bytes)
+            elif 'v' in inp:
+                logger.info(
+                    f"You pressed 'v'. Vehicles position will be send. "
+                    f"Input: '{inp}'")
+                _, x, y, phi = inp.split(' ')
+                p = Point2D(x=float(x), y=float(y))
+                vp = Vehicle2DPosition(
+                    p=p, phi=float(phi))
+                # Convert the struct to bytes
+                size_vp = ctypes.sizeof(vp)
+                vp_bytes = ctypes.string_at(
+                    ctypes.byref(vp), size_vp)
+                ser.write("PV".encode())
+                ser.write(vp_bytes)
             elif 'd' in inp:
                 logger.info("You pressed 'd'. 'done' cmd will be send")
-                ser.write('done'.encode())
+                ser.write('CMdone'.encode())
             elif 'a' in inp:
                 logger.info("You pressed 'a'. 'abort' cmd will be send")
-                ser.write('abort'.encode())
+                ser.write('CMabort'.encode())
             elif 'o' in inp:
                 logger.info("You pressed 'o'. 'ok' cmd will be send")
-                ser.write('ok'.encode())
+                ser.write('CMok'.encode())
             elif 'r' in inp:
                 while True:
                     data = ser.read()

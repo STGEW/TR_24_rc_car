@@ -8,7 +8,8 @@
 #include "joystick.h"
 #include "autonomousMode.h"
 
-#define JOYSTICK_TIMEOUT_SEC    1.0
+#define JOYSTICK_TIMEOUT_SEC                1.0
+#define VEH_UPD_POS_MSG_PER_SEC             0.1
 
 
 void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
@@ -35,6 +36,10 @@ void runControlArbiterTask( void *pvParameters )
     Joystick joystick = Joystick();
     TickType_t lastJoyRxTick = xTaskGetTickCount();
     float secSinceLastJoyRx;
+
+    Vehicle2DPosition veh_pos;
+    TickType_t lastVehiclePosTick = xTaskGetTickCount();
+    float secSinceLastVehiclePos;
 
     Point2D point_2D; // new task for path planning
     AutonomousMode autoMode = AutonomousMode();
@@ -72,6 +77,13 @@ void runControlArbiterTask( void *pvParameters )
                     send_done();
                 }
 
+                // send vehicles position to ext PC
+                secSinceLastVehiclePos = secondsSinceLastTick(lastVehiclePosTick);
+                if (secSinceLastVehiclePos > VEH_UPD_POS_MSG_PER_SEC) {
+                    lastVehiclePosTick = xTaskGetTickCount();
+                    autoMode.get_vehicle_pos(veh_pos);
+                    send_position(veh_pos);
+                }
             } else {
                 // manual ctrl
                 if ((true == ext_ctrl_prev) && (false == ext_ctrl)) {
