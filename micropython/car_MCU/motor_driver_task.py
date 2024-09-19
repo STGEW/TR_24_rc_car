@@ -2,29 +2,55 @@ from consts import FORWARD, OFF, REVERSE, BRAKE
 from consts import AI1_PIN, AI2_PIN, BI1_PIN, BI2_PIN
 from consts import STBY_PIN
 from consts import PWM_A_PIN, PWM_B_PIN
+from consts import UNDER_DEBUG
 
 from machine import Pin, PWM
 
 
-AI1_gpio = Pin(AI1_PIN, Pin.OUT)
-AI2_gpio = Pin(AI2_PIN, Pin.OUT)
-BI1_gpio = Pin(BI1_PIN, Pin.OUT)
-BI2_gpio = Pin(BI2_PIN, Pin.OUT)
+if UNDER_DEBUG:
+    AI1_gpio = None
+    AI2_gpio = None
+    BI1_gpio = None
+    BI2_gpio = None
 
-STBY_gpio = Pin(STBY_PIN, Pin.OUT)
+    STBY_gpio = None
 
-A_pwm = PWM(Pin(PWM_A_PIN))
-A_pwm.freq(50)
-A_pwm.duty_u16(0)
+    A_pwm = None
+    B_pwm = None
 
-B_pwm = PWM(Pin(PWM_B_PIN))
-B_pwm.freq(50)
-B_pwm.duty_u16(0)
+else:
+    AI1_gpio = Pin(AI1_PIN, Pin.OUT)
+    AI2_gpio = Pin(AI2_PIN, Pin.OUT)
+    BI1_gpio = Pin(BI1_PIN, Pin.OUT)
+    BI2_gpio = Pin(BI2_PIN, Pin.OUT)
+
+    STBY_gpio = Pin(STBY_PIN, Pin.OUT)
+
+    A_pwm = PWM(Pin(PWM_A_PIN))
+    A_pwm.freq(50)
+    A_pwm.duty_u16(0)
+
+    B_pwm = PWM(Pin(PWM_B_PIN))
+    B_pwm.freq(50)
+    B_pwm.duty_u16(0)
+
 
 def init_motor_driver_task():
+    if UNDER_DEBUG:
+        return
     _set_motor_direction(AI1_gpio, AI2_gpio, OFF)
     _set_motor_direction(BI1_gpio, BI2_gpio, OFF)
     STBY_gpio.on()
+
+
+def run_motor_driver_task(driver):
+    # print(f'Run motor driver task. Driver: {driver.direction_A} {driver.direction_B} {driver.duty_cycle_A} {driver.duty_cycle_B}')
+    if UNDER_DEBUG:
+        return
+    _set_motor_direction(AI1_gpio, AI2_gpio, driver.direction_A)
+    A_pwm.duty_u16(driver.duty_cycle_A)
+    _set_motor_direction(BI1_gpio, BI2_gpio, driver.direction_B)
+    B_pwm.duty_u16(driver.duty_cycle_B)
 
 
 def _set_motor_direction(i1_pin, i2_pin, direction):
@@ -42,11 +68,3 @@ def _set_motor_direction(i1_pin, i2_pin, direction):
         # BRAKE
         i1_pin.on()
         i2_pin.on()
-
-
-def motor_driver_task(driver):
-    print(f'Motor driver task. Driver: {driver}')
-    _set_motor_direction(AI1_gpio, AI2_gpio, driver.direction_A)
-    A_pwm.duty_u16(driver.duty_cycle_A)
-    _set_motor_direction(BI1_gpio, BI2_gpio, driver.direction_B)
-    B_pwm.duty_u16(driver.duty_cycle_B)

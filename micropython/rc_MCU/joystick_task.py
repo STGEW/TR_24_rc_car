@@ -6,5 +6,7 @@ adc_x = ADC(Pin(X_AXIS_PIN)) # 0-65535
 adc_y = ADC(Pin(Y_AXIS_PIN)) # 0-65535
 
 
-def joystick_task():
-    return adc_x.read_u16(), adc_y.read_u16()
+def run_joystick_task():
+    x = adc_x.read_u16()
+    y = adc_y.read_u16()
+    return x, y
