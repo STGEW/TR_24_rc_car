@@ -21,6 +21,7 @@ public:
     bool is_done();
     void update();
     void get_vehicle_pos(Vehicle2DPosition & pos);
+    AutonomousModeState read_state();
 
 private:
 

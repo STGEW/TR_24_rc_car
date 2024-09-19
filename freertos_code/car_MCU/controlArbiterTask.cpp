@@ -9,7 +9,7 @@
 #include "autonomousMode.h"
 
 #define JOYSTICK_TIMEOUT_SEC                1.0
-#define VEH_UPD_POS_MSG_PER_SEC             0.1
+#define VEH_UPD_POS_MSG_PER_SEC             0.2
 
 
 void dataEnginesToDriver(EnginesPwr & engines, DriverControlData & driver);
@@ -78,12 +78,17 @@ void runControlArbiterTask( void *pvParameters )
                 }
 
                 // send vehicles position to ext PC
-                secSinceLastVehiclePos = secondsSinceLastTick(lastVehiclePosTick);
-                if (secSinceLastVehiclePos > VEH_UPD_POS_MSG_PER_SEC) {
-                    lastVehiclePosTick = xTaskGetTickCount();
-                    autoMode.get_vehicle_pos(veh_pos);
-                    send_position(veh_pos);
+                // only if we are executing a task right now
+                if (    (autoMode.read_state() != WAITING_FOR_TASK) &&
+                        (autoMode.read_state() != DONE)) {
+                    secSinceLastVehiclePos = secondsSinceLastTick(lastVehiclePosTick);
+                    if (secSinceLastVehiclePos > VEH_UPD_POS_MSG_PER_SEC) {
+                        lastVehiclePosTick = xTaskGetTickCount();
+                        autoMode.get_vehicle_pos(veh_pos);
+                        send_position(veh_pos);
+                    }
                 }
+
             } else {
                 // manual ctrl
                 if ((true == ext_ctrl_prev) && (false == ext_ctrl)) {

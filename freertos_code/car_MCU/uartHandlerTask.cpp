@@ -97,7 +97,7 @@ void setupUartHandlerHardware()
 void runUartHandlerTask(void *pvParameters) {
     size_t bytes_to_read;
     char * uart_tx_ptr;
-    Vehicle2DPosition * veh_pos;
+    Vehicle2DPosition veh_pos;
     void (*new_point_cb_ptr)(Point2D * point_2D) = &new_point_cb;
     void (*stop_cb_ptr)(void) = &stop_cb;
 
@@ -117,9 +117,9 @@ void runUartHandlerTask(void *pvParameters) {
             printf(
                 "UART task received vehicle position from queue. "
                 "x: %f y: %f phi: %f\n", 
-                veh_pos->p.x,
-                veh_pos->p.y,
-                veh_pos->phi);
+                veh_pos.p.x,
+                veh_pos.p.y,
+                veh_pos.phi);
             uart_puts(UART_CTRL_ID, prefix_pos_veh);
             uart_write_blocking(UART_CTRL_ID, (const uint8_t*)&veh_pos, sizeof(veh_pos));
         }

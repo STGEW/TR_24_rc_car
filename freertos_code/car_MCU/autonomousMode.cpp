@@ -151,15 +151,19 @@ void AutonomousMode::update() {
     while (pos.phi > M_PI) pos.phi -= 2.0 * M_PI;
     while (pos.phi < -M_PI) pos.phi += 2.0 * M_PI;
 
-    printf(
-        "pos x: %f y: %f phi: %f\n",
-        pos.p.x, pos.p.y, pos.phi);
+    // printf(
+    //     "pos x: %f y: %f phi: %f\n",
+    //     pos.p.x, pos.p.y, pos.phi);
 
     runMotorDriver(d);
 }
 
 void AutonomousMode::get_vehicle_pos(Vehicle2DPosition & _pos) {
     _pos = pos;
+}
+
+AutonomousModeState AutonomousMode::read_state() {
+    return state;
 }
 
 void AutonomousMode::prepare_to_yaw(int &angle_n, int &motor_dir) {
