@@ -20,9 +20,6 @@ Communication is done with 2 tranceivers via RF channel. A protocol is extremely
 # Freertos part
 The code is written on C with Freertos OS. For technical details please check ./freertos_code/README.md
 
-# Micropython part
-I gave up with micropython version for a while. The reason is - with the same set of hardware I can't get stable results with RF module. I suspect the reason is in SPI implementation or in the implementation of the driver (it's a part of drivers of micropython github project) for NRF24L01 tranceiver module.
-
 # BOM
 Joysticks - KY-023 - 2 items
 Battery for car - LiPo battery DC-12300 (12V 3000 mAh)
