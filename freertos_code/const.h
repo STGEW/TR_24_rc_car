@@ -4,6 +4,8 @@
 
 #define mainRUN_ON_CORE 1
 
+#define UART_LOG_TX_PIN     0
+#define UART_LOG_RX_PIN     1
 #define IMU_I2C_SDA_PIN     2
 #define IMU_I2C_SCL_PIN     3
 #define UART_CTRL_TX_PIN    4
@@ -32,6 +34,8 @@
 #define UART_CTRL_ID        uart1
 #define UART_CTRL_BAUD_RATE 460800
 
+#define UART_LOG_ID        uart0
+#define UART_LOG_BAUD_RATE 460800
 
 // contains raw measurements from joystick
 struct __attribute__((__packed__)) JoystickRawData {

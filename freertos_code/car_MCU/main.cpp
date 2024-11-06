@@ -133,6 +133,12 @@ int main( void )
 static void prvSetupHardware( void )
 {
     stdio_init_all();
+    // By default uart 0 has BR 115200, we want it to be higher
+    uart_init(UART_LOG_ID, UART_LOG_BAUD_RATE);
+    gpio_set_function(UART_LOG_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(UART_LOG_RX_PIN, GPIO_FUNC_UART);
+    uart_puts(uart0, "RC car is ready\n");
+
     setupMotorDriver();
     setupIMURawTask();
     setupControlArbiterTask();

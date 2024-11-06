@@ -67,5 +67,4 @@ target_link_libraries(main_car_mcu pico_stdlib hardware_pwm hardware_spi hardwar
 pico_add_extra_outputs(main_car_mcu)
 
 # Use USB uart
-pico_enable_stdio_usb(main_car_mcu 1)
 pico_enable_stdio_uart(main_car_mcu 1)

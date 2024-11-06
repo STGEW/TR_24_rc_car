@@ -58,5 +58,4 @@ target_link_libraries(main_rc_mcu pico_stdlib hardware_adc hardware_spi RF24 Fre
 pico_add_extra_outputs(main_rc_mcu)
 
 # Use USB uart
-pico_enable_stdio_usb(main_rc_mcu 1)
 pico_enable_stdio_uart(main_rc_mcu 1)
